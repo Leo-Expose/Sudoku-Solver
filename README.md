@@ -32,7 +32,7 @@ You're hosting it only on your network tho
 
 3. **Install the dependencies (ABSOLUTELY NECESSARY)**: 
     ```bash
-    pip install -r requirements.txt
+    pip install -r static/requirements.txt
     ```
     or just install flask cuz that's all you need
    ```bash

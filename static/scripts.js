@@ -1,85 +1,179 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const solveButton = document.getElementById('solve-button');
-    const clearButton = document.getElementById('clear-button');
-    const randomButton = document.getElementById('random-button');
-    const statusDiv = document.getElementById('status');
+document.addEventListener("DOMContentLoaded", () => {
+    const solveBtn = document.getElementById("solve-btn");
+    const clearBtn = document.getElementById("clear-btn");
+    const randomBtn = document.getElementById("random-btn");
+    const statusDiv = document.getElementById("status");
+    const solveText = solveBtn.querySelector(".btn-text");
+    const solveSpinner = solveBtn.querySelector(".spinner");
 
-    solveButton.addEventListener('click', async () => {
-        let grid = [];
-        for (let i = 0; i < 9; i++) {
-            let row = [];
-            for (let j = 0; j < 9; j++) {
-                let value = document.getElementById(`cell-${i}-${j}`).value;
-                row.push(value ? parseInt(value) : 0);
+    function getGrid() {
+        const grid = [];
+        for (let r = 0; r < 9; r++) {
+            const row = [];
+            for (let c = 0; c < 9; c++) {
+                const val = document.getElementById(`cell-${r}-${c}`).value;
+                row.push(val ? parseInt(val, 10) : 0);
             }
             grid.push(row);
         }
+        return grid;
+    }
 
-        let response = await fetch('/solve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ grid })
-        });
+    function setCell(r, c, value, cls) {
+        const cell = document.getElementById(`cell-${r}-${c}`);
+        cell.value = value || "";
+        cell.className = cls || "";
+    }
 
-        let result = await response.json();
-        if (result.solution) {
-            let solvedGrid = result.solution;
-            for (let i = 0; i < 9; i++) {
-                for (let j = 0; j < 9; j++) {
-                    document.getElementById(`cell-${i}-${j}`).value = solvedGrid[i][j];
-                }
-            }
-            statusDiv.textContent = 'Solved!';
-            disableInputs(true);
-        } else {
-            statusDiv.textContent = result.error || 'Error solving the puzzle!';
-        }
-    });
-
-    clearButton.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear the puzzle?')) {
-            for (let i = 0; i < 9; i++) {
-                for (let j = 0; j < 9; j++) {
-                    document.getElementById(`cell-${i}-${j}`).value = '';
-                }
-            }
-            statusDiv.textContent = 'Grid cleared.';
-            disableInputs(false);
-        }
-    });
-
-    randomButton.addEventListener('click', async () => {
-        let response = await fetch('/random', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        let result = await response.json();
-        if (result.grid) {
-            let randomGrid = result.grid;
-            for (let i = 0; i < 9; i++) {
-                for (let j = 0; j < 9; j++) {
-                    document.getElementById(`cell-${i}-${j}`).value = randomGrid[i][j] || '';
-                }
-            }
-            statusDiv.textContent = 'Random puzzle generated.';
-        } else {
-            statusDiv.textContent = 'Error generating random puzzle!';
-        }
-    });
-
-    function disableInputs(disable) {
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
-                document.getElementById(`cell-${i}-${j}`).disabled = disable;
+    function clearAllCells() {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                setCell(r, c, "", "");
             }
         }
     }
+
+    function setStatus(msg, type) {
+        statusDiv.textContent = msg;
+        statusDiv.className = type || "";
+    }
+
+    function setLoading(loading) {
+        solveBtn.disabled = loading;
+        randomBtn.disabled = loading;
+        solveText.hidden = loading;
+        solveSpinner.hidden = !loading;
+    }
+
+    /* Solve with animation */
+    solveBtn.addEventListener("click", async () => {
+        const grid = getGrid();
+        setLoading(true);
+        setStatus("Solving...", "");
+
+        try {
+            const res = await fetch("/solve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ grid }),
+            });
+            const data = await res.json();
+
+            if (data.solution) {
+                setStatus("Solved!", "success");
+                await animateSolution(grid, data.solution);
+            } else {
+                setStatus(data.error || "No solution exists", "error");
+            }
+        } catch {
+            setStatus("Network error", "error");
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    async function animateSolution(original, solution) {
+        const cellsToFill = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (original[r][c] === 0 && solution[r][c] !== 0) {
+                    cellsToFill.push({ r, c, val: solution[r][c] });
+                }
+            }
+        }
+
+        for (const { r, c, val } of cellsToFill) {
+            setCell(r, c, val, "solved");
+            await sleep(18);
+        }
+    }
+
+    /* Clear */
+    clearBtn.addEventListener("click", () => {
+        clearAllCells();
+        setStatus("Grid cleared", "");
+    });
+
+    /* Random puzzle */
+    randomBtn.addEventListener("click", async () => {
+        setLoading(true);
+        setStatus("Generating puzzle...", "");
+
+        try {
+            const res = await fetch("/generate?difficulty=medium");
+            const data = await res.json();
+
+            if (data.puzzle) {
+                clearAllCells();
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (data.puzzle[r][c] !== 0) {
+                            setCell(r, c, data.puzzle[r][c], "given");
+                        }
+                    }
+                }
+                setStatus("Puzzle generated - solve it!", "success");
+            } else {
+                setStatus("Error generating puzzle", "error");
+            }
+        } catch {
+            setStatus("Network error", "error");
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    /* Input validation */
+    document.getElementById("grid").addEventListener("input", (e) => {
+        const cell = e.target;
+        if (cell.tagName !== "INPUT") return;
+        cell.value = cell.value.replace(/[^1-9]/g, "").slice(0, 1);
+        if (cell.classList.contains("error-cell")) {
+            cell.classList.remove("error-cell");
+        }
+    });
+
+    /* Keyboard navigation */
+    document.getElementById("grid").addEventListener("keydown", (e) => {
+        const cell = e.target;
+        if (cell.tagName !== "INPUT") return;
+        const r = parseInt(cell.dataset.row, 10);
+        const c = parseInt(cell.dataset.col, 10);
+
+        let nr = r, nc = c;
+        switch (e.key) {
+            case "ArrowUp":    nr = Math.max(0, r - 1); break;
+            case "ArrowDown":  nr = Math.min(8, r + 1); break;
+            case "ArrowLeft":  nc = Math.max(0, c - 1); break;
+            case "ArrowRight": nc = Math.min(8, c + 1); break;
+            case "Backspace":
+            case "Delete":
+                cell.value = "";
+                return;
+            default:
+                return;
+        }
+
+        e.preventDefault();
+        document.getElementById(`cell-${nr}-${nc}`).focus();
+    });
+
+    /* Auto-advance on single digit input */
+    document.getElementById("grid").addEventListener("input", (e) => {
+        const cell = e.target;
+        if (cell.tagName !== "INPUT") return;
+        if (cell.value.length === 1) {
+            const r = parseInt(cell.dataset.row, 10);
+            const c = parseInt(cell.dataset.col, 10);
+            if (c < 8) {
+                document.getElementById(`cell-${r}-${c + 1}`).focus();
+            } else if (r < 8) {
+                document.getElementById(`cell-${r + 1}-0`).focus();
+            }
+        }
+    });
 });
 
-function validateInput(input) {
-    const value = input.value;
-    if (!/^[1-9]$/.test(value)) {
-        input.value = '';
-    }
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }

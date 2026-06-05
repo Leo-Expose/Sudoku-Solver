@@ -10,21 +10,43 @@
 <body>
     <div class="container">
         <h1>Sudoku Solver</h1>
-        <div id="grid">
-            {% for i in range(9) %}
-                <div class="row">
-                    {% for j in range(9) %}
-                        <input type="text" id="cell-{{i}}-{{j}}" maxlength="1" oninput="validateInput(this)" pattern="[1-9]">
+
+        <div id="grid-wrapper">
+            <div id="grid">
+                {% for box_row in range(3) %}
+                    {% for box_col in range(3) %}
+                        <div class="box" data-box="{{ box_row }}-{{ box_col }}">
+                            {% for cell_row in range(3) %}
+                                {% for cell_col in range(3) %}
+                                    {% set r = box_row * 3 + cell_row %}
+                                    {% set c = box_col * 3 + cell_col %}
+                                    <input
+                                        type="text"
+                                        inputmode="numeric"
+                                        maxlength="1"
+                                        id="cell-{{ r }}-{{ c }}"
+                                        data-row="{{ r }}"
+                                        data-col="{{ c }}"
+                                        autocomplete="off"
+                                    >
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
                     {% endfor %}
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
+
         <div id="buttons">
-            <button id="solve-button">Solve</button>
-            <button id="clear-button">Clear</button>
-            <button id="random-button">Random Puzzle</button>
+            <button id="solve-btn" class="btn btn-primary">
+                <span class="btn-text">Solve</span>
+                <span class="spinner" hidden></span>
+            </button>
+            <button id="clear-btn" class="btn btn-secondary">Clear</button>
+            <button id="random-btn" class="btn btn-accent">Random Puzzle</button>
         </div>
-        <div id="status">Enter numbers</div>
+
+        <div id="status" aria-live="polite">Enter numbers or generate a puzzle</div>
     </div>
 </body>
 </html>

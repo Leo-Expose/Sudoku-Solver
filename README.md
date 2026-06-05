@@ -1,55 +1,40 @@
 # Sudoku Solver
 
-A web-based Sudoku Solver that allows users to input a Sudoku puzzle and solve it, clear the grid, or generate a random puzzle.
-You're hosting it only on your network tho
+A web-based Sudoku solver with a modern dark UI. Generate puzzles, solve them interactively, or enter your own.
 
 ## Features
 
-- **Solve Sudoku Puzzle**: Input your Sudoku puzzle and get the solution.
-- **Clear Grid**: Clear the entire grid to start fresh.
-- **Generate Random Puzzle**: Generate a random Sudoku puzzle.
-- Create an issue if you want a fight or more features
+- **Solve** - Enter any valid Sudoku puzzle and solve it with one click
+- **Random Puzzle** - Generate a valid Sudoku puzzle with a unique solution
+- **Solve Animation** - Watch the solution fill in cell by cell
+- **Keyboard Navigation** - Arrow keys to move between cells, auto-advance on input
+- **Dark Theme** - Modern purple/dark gradient design
 
-## Running the program
-- Download the zip file
-- Open *run.cmd*
+## Quick Start
 
+### Option 1: Run the batch file (Windows)
 
-## Manual Installation & Running
+Double-click `run.cmd` — it will install Flask if needed and open the app in your browser.
 
-1. **Clone the repository**:
-    ```bash
-    git clone https://github.com/Leo-Expose/Sudoku-Solver.git
-    cd sudoku-solver
-    
-    ```
+### Option 2: Manual setup
 
-2. **Create and activate a virtual environment (ABSOLUTELY NOT NECESSARY BUT GOOGLE INSISTS)**:
-    ```bash
-    python -m venv venv
-    venv\Scripts\activate
-    ```
+```bash
+git clone https://github.com/Leo-Expose/Sudoku-Solver.git
+cd Sudoku-Solver
 
-3. **Install the dependencies (ABSOLUTELY NECESSARY)**: 
-    ```bash
-    pip install -r static/requirements.txt
-    ```
-    or just install flask cuz that's all you need
-   ```bash
-   pip install flask
-   ```
+python -m venv venv
+source venv/bin/activate   # Linux/macOS
+venv\Scripts\activate      # Windows
 
-## Running the Application
+pip install -r requirements.txt
+python Solver.py
+```
 
-1. **Run the Flask server**:
-    ```bash
-    python solver.py
-    ```
+Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
 
-2. **Open your browser and go to**:
-    ```
-    http://127.0.0.1:5000
-    ```
+## Tech Stack
 
-## This entire can be just done by opening the run.cmd file but sometimes Windows hate bat files idk why
-
+- **Backend:** Python, Flask
+- **Frontend:** Vanilla JS, CSS Grid
+- **Solver:** Backtracking algorithm
+- **Generator:** Backtracking fill + uniqueness check per removal

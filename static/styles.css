@@ -15,6 +15,7 @@
     --color-surface:  #F0F0ED; /* Level 1: sidebar, grid-wrapper outer frame */
     --color-card:     #FAFAFA; /* Level 2: bento cards, flyouts */
     --color-cell:     #FFFFFF; /* Level 3: grid cells — purest white */
+    --color-cell-shaded: #F0F4F8; /* Shaded checkerboard blocks — very light blue/gray */
 
     --color-border:   #C8C8C4;
     --color-text:     #111111;
@@ -23,8 +24,9 @@
     --grid-line-thick: #111111;
     --grid-line-thin:  #CBCBC7; /* visible between cells, matches border tone */
 
-    --cell-highlight-same:    #E2E2DF;
-    --cell-highlight-related: #EAEAE7;
+    --cell-highlight-same:    #C2DBFA; /* Soft clear blue for active cell and same digits */
+    --cell-highlight-axis:    #E8F0FE; /* Soft light blue/gray for crosshair row/column */
+    --cell-highlight-block:   #E8F0FE; /* Unified soft light blue/gray for crosshair 3x3 block */
 
     --radius-sm: 4px;
     --radius-md: 6px;
@@ -41,6 +43,7 @@
     --color-surface:  #161616; /* Level 1: sidebar, grid-wrapper */
     --color-card:     #202020; /* Level 2: bento cards */
     --color-cell:     #2A2A2A; /* Level 3: grid cells — lightest surface */
+    --color-cell-shaded: #1E2226; /* Shaded checkerboard blocks — slightly darker cool gray */
 
     --color-border:   #303030;
     --color-text:     #E5E5E5;
@@ -49,8 +52,9 @@
     --grid-line-thick: #E5E5E5;
     --grid-line-thin:  #303030;
 
-    --cell-highlight-same:    #373737;
-    --cell-highlight-related: #252525;
+    --cell-highlight-same:    #3C4759; /* Distinct slate blue for active/same cell */
+    --cell-highlight-axis:    #2D333F; /* Soft blue-gray highlight for crosshair row/column */
+    --cell-highlight-block:   #2D333F; /* Unified soft blue-gray highlight for crosshair 3x3 block */
 
     color-scheme: dark;
 }
@@ -155,6 +159,11 @@ body {
     transition: background-color 0.15s ease;
 }
 
+/* 3x3 sub-grid alternating shading */
+.box:nth-child(even) .cell-container {
+    background-color: var(--color-cell-shaded);
+}
+
 .cell-input {
     position: absolute;
     top: 0;
@@ -179,9 +188,13 @@ body {
     font-weight: 600;
 }
 
-/* Cell highlight states */
-.cell-container.highlight-related {
-    background-color: var(--cell-highlight-related);
+/* Cell highlight states (high specificity to override checkerboard shading) */
+.box .cell-container.highlight-axis {
+    background-color: var(--cell-highlight-axis);
+}
+
+.box .cell-container.highlight-block {
+    background-color: var(--cell-highlight-block);
 }
 
 .cell-input.highlight-same {

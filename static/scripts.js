@@ -519,8 +519,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function highlightRelatedCells(focusRow, focusCol) {
-        document.querySelectorAll(".cell-container.highlight-related").forEach(el => {
-            el.classList.remove("highlight-related");
+        document.querySelectorAll(".cell-container.highlight-axis").forEach(el => {
+            el.classList.remove("highlight-axis");
+        });
+        document.querySelectorAll(".cell-container.highlight-block").forEach(el => {
+            el.classList.remove("highlight-block");
         });
 
         if (focusRow === null || focusCol === null || focusRow === undefined || focusCol === undefined) return;
@@ -531,9 +534,17 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
                 if (r === focusRow && c === focusCol) continue;
-                if (r === focusRow || c === focusCol || (r >= boxR && r < boxR + 3 && c >= boxC && c < boxC + 3)) {
+                
+                const isAxis = (r === focusRow || c === focusCol);
+                const isBlock = (r >= boxR && r < boxR + 3 && c >= boxC && c < boxC + 3);
+
+                if (isAxis || isBlock) {
                     const cellContainer = document.getElementById(`cell-${r}-${c}`).parentElement;
-                    cellContainer.classList.add("highlight-related");
+                    if (isAxis) {
+                        cellContainer.classList.add("highlight-axis");
+                    } else if (isBlock) {
+                        cellContainer.classList.add("highlight-block");
+                    }
                 }
             }
         }

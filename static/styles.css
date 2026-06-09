@@ -1,125 +1,298 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 *,
 *::before,
 *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
 }
 
+:root {
+    /* Catppuccin Latte (Light Mode) Colors */
+    --ctp-base: #eff1f5;
+    --ctp-mantle: #e6e9ef;
+    --ctp-crust: #dce0e8;
+    --ctp-text: #4c4f69;
+    --ctp-text-muted: #6c6f85;
+    --ctp-surface0: #ccd0da;
+    --ctp-surface1: #bcc0cc;
+    --ctp-surface2: #acb0be;
+    --ctp-overlay0: #9ca0b0;
+    --ctp-overlay1: #8c8fa1;
+    
+    /* Strict Monochrome Accents (Dark Text on Light Background) */
+    --ctp-accent: #4c4f69;
+    --ctp-accent-hover: #6c6f85;
+    
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.04);
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    /* Catppuccin Mocha (Dark Mode) Colors */
+    --ctp-base: #1e1e2e;
+    --ctp-mantle: #181825;
+    --ctp-crust: #11111b;
+    --ctp-text: #cdd6f4;
+    --ctp-text-muted: #a6adc8;
+    --ctp-surface0: #313244;
+    --ctp-surface1: #45475a;
+    --ctp-surface2: #585b70;
+    --ctp-overlay0: #6c7086;
+    --ctp-overlay1: #7f849c;
+    
+    /* Strict Monochrome Accents (Light Text on Dark Background) */
+    --ctp-accent: #cdd6f4;
+    --ctp-accent-hover: #a6adc8;
+    
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+    color-scheme: dark;
+}
+
+/* Base Styles with radial gradient background */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at 50% 20%, var(--ctp-mantle) 0%, var(--ctp-crust) 100%);
+    background-attachment: fixed;
+    color: var(--ctp-text);
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: #fafafa;
-    color: #333;
+    padding: 24px 16px;
 }
 
-.container {
-    text-align: center;
+:root[data-theme="dark"] body {
+    background: radial-gradient(circle at 50% 20%, #1e1e2e 0%, #11111b 100%);
 }
 
-h1 {
-    font-size: 1.3rem;
+:root[data-theme="light"] body {
+    background: radial-gradient(circle at 50% 20%, #eff1f5 0%, #dce0e8 100%);
+}
+
+/* Main Container Card */
+.app-card {
+    background-color: var(--ctp-base);
+    border: 1px solid var(--ctp-surface0);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--ctp-surface0);
+    padding-bottom: 12px;
+}
+
+.brand h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+}
+
+.brand .subtitle {
+    font-size: 0.75rem;
+    color: var(--ctp-text-muted);
+    font-weight: 400;
+}
+
+/* Theme Toggle */
+.icon-btn {
+    background: none;
+    border: 1px solid var(--ctp-surface1);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ctp-text);
+    background-color: transparent;
+}
+
+.icon-btn:hover {
+    background-color: var(--ctp-surface0);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Sun/Moon Toggle Visibilities */
+:root .sun-icon { display: none; }
+:root .moon-icon { display: block; }
+:root[data-theme="dark"] .sun-icon { display: block; }
+:root[data-theme="dark"] .moon-icon { display: none; }
+
+/* Main layout block containing spaced components */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Separates diff selector, grid, and button controls cleanly */
+}
+
+/* Difficulty Segment Control */
+.difficulty-selector {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.diff-btn {
+    flex: 1;
+    padding: 6px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #222;
-    margin-bottom: 16px;
+    border: 1px solid var(--ctp-surface1);
+    background-color: transparent;
+    color: var(--ctp-text-muted);
+    border-radius: 6px;
+    cursor: pointer;
 }
 
-/* Grid */
-#grid {
-    display: inline-grid;
-    grid-template-columns: repeat(3, auto);
-    gap: 2px;
-    background: #222;
-    padding: 2px;
-    margin-bottom: 16px;
+.diff-btn:hover {
+    background-color: var(--ctp-surface0);
+    color: var(--ctp-text);
 }
 
+.diff-btn.active {
+    background-color: var(--ctp-accent);
+    color: var(--ctp-base);
+    border-color: var(--ctp-accent);
+}
+
+/* Crisp Sudoku Grid Layout with exact dimensions to prevent overlap */
 #grid-wrapper {
-    margin-bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#grid {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    background-color: var(--ctp-text); /* Thick boundary separators */
+    border: 2px solid var(--ctp-text);
+    gap: 2px;
+    border-radius: 6px;
+    overflow: hidden;
+    width: fit-content;
+    height: fit-content;
 }
 
 .box {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 42px);
+    grid-template-rows: repeat(3, 42px);
+    background-color: var(--ctp-surface2); /* Thin cell separators background */
     gap: 1px;
-    background: #ccc;
 }
 
+/* Cells Inputs */
 input {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
+    display: block;
     text-align: center;
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 500;
+    font-family: 'Inter', sans-serif;
     border: none;
     outline: none;
-    background: #fff;
-    color: #222;
-    -moz-appearance: textfield;
+    background-color: var(--ctp-base);
+    color: var(--ctp-text);
+    border-radius: 0;
+    caret-color: transparent;
 }
 
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-}
-
+/* Interactive States */
 input:focus {
-    background: #e8f0fe;
+    background-color: var(--ctp-surface1) !important;
 }
 
+/* Highlight related group cells (row, column, box) */
+input.highlight-bg {
+    background-color: rgba(205, 214, 244, 0.05);
+}
+:root[data-theme="light"] input.highlight-bg {
+    background-color: rgba(76, 79, 105, 0.04);
+}
+
+/* Given/Readonly Numbers */
 input.given {
+    background-color: var(--ctp-mantle);
+    color: var(--ctp-text);
     font-weight: 700;
-    color: #000;
 }
 
+/* Successfully solved numbers (Monochrome style, bold-ish) */
 input.solved {
-    color: #1a7f37;
-    animation: fadeIn 0.2s ease-out;
+    color: var(--ctp-text);
+    font-weight: 600;
+    animation: solvePulse 0.3s ease-out;
 }
 
+/* Conflict Rule Violations (Monochrome style - thick inner border & line-through) */
 input.error-cell {
-    background: #fff0f0;
-    color: #cf222e;
+    box-shadow: inset 0 0 0 2px var(--ctp-text);
+    background-color: var(--ctp-surface1) !important;
+    text-decoration: underline;
+    font-weight: 700;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+@keyframes solvePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+    100% { transform: scale(1); }
 }
 
-/* Buttons */
+/* Actions Buttons Control Row */
 #buttons {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 2fr;
     gap: 6px;
-    margin-bottom: 12px;
 }
 
 .btn {
-    display: inline-flex;
+    height: 38px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--ctp-surface1);
+    cursor: pointer;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 7px 14px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    border: 1px solid #d0d0d0;
-    border-radius: 6px;
-    background: #fff;
-    color: #333;
-    cursor: pointer;
-    transition: background 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
 
-.btn:hover {
-    background: #f0f0f0;
+.btn:hover:not(:disabled) {
+    background-color: var(--ctp-surface0);
 }
 
-.btn:active {
-    background: #e4e4e4;
+.btn:active:not(:disabled) {
+    background-color: var(--ctp-surface1);
 }
 
 .btn:disabled {
@@ -127,22 +300,39 @@ input.error-cell {
     cursor: not-allowed;
 }
 
+/* High contrast primary and active buttons using Monochrome Accent */
 .btn-primary {
-    background: #222;
-    color: #fff;
-    border-color: #222;
+    background-color: var(--ctp-accent);
+    color: var(--ctp-base);
+    border-color: var(--ctp-accent);
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #333;
+    background-color: var(--ctp-accent-hover);
 }
 
-/* Spinner */
+.btn-secondary {
+    background-color: transparent;
+    color: var(--ctp-text);
+    border-color: var(--ctp-surface1);
+}
+
+.btn-accent {
+    background-color: transparent;
+    color: var(--ctp-text);
+    border-color: var(--ctp-text);
+}
+
+.btn-accent:hover:not(:disabled) {
+    background-color: var(--ctp-surface0);
+}
+
+/* Loading Spinner */
 .spinner {
     width: 14px;
     height: 14px;
     border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #fff;
+    border-top-color: currentColor;
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
 }
@@ -151,26 +341,50 @@ input.error-cell {
     to { transform: rotate(360deg); }
 }
 
-/* Status */
+/* Footer & Status Display */
+footer {
+    border-top: 1px solid var(--ctp-surface0);
+    padding-top: 12px;
+    text-align: center;
+}
+
 #status {
     font-size: 0.8rem;
-    color: #888;
+    color: var(--ctp-text-muted);
+    font-weight: 500;
     min-height: 1.2em;
 }
 
 #status.success {
-    color: #1a7f37;
+    color: var(--ctp-text);
+    font-weight: 600;
 }
 
 #status.error {
-    color: #cf222e;
+    color: var(--ctp-text);
+    text-decoration: underline;
+    font-weight: 600;
 }
 
-/* Responsive */
-@media (max-width: 420px) {
+/* Mobile Responsiveness */
+@media (max-width: 400px) {
+    .app-card {
+        padding: 20px;
+        gap: 16px;
+    }
+    .box {
+        grid-template-columns: repeat(3, 34px);
+        grid-template-rows: repeat(3, 34px);
+    }
     input {
         width: 34px;
         height: 34px;
-        font-size: 16px;
+        font-size: 17px;
+    }
+    .btn {
+        font-size: 0.75rem;
+    }
+    #buttons {
+        grid-template-columns: repeat(2, 1fr);
     }
 }

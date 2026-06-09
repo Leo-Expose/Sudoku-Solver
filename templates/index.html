@@ -3,50 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudoku Solver</title>
+    <title>Minimal Sudoku Solver</title>
+    <meta id="color-meta" name="color-scheme" content="light dark">
+    <script>
+        {
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme) {
+                document.documentElement.setAttribute("data-theme", savedTheme);
+                const meta = document.getElementById("color-meta");
+                if (meta) meta.content = savedTheme;
+            }
+        }
+    </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Sudoku Solver</h1>
-
-        <div id="grid-wrapper">
-            <div id="grid">
-                {% for box_row in range(3) %}
-                    {% for box_col in range(3) %}
-                        <div class="box" data-box="{{ box_row }}-{{ box_col }}">
-                            {% for cell_row in range(3) %}
-                                {% for cell_col in range(3) %}
-                                    {% set r = box_row * 3 + cell_row %}
-                                    {% set c = box_col * 3 + cell_col %}
-                                    <input
-                                        type="text"
-                                        inputmode="numeric"
-                                        maxlength="1"
-                                        id="cell-{{ r }}-{{ c }}"
-                                        data-row="{{ r }}"
-                                        data-col="{{ c }}"
-                                        autocomplete="off"
-                                    >
-                                {% endfor %}
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                {% endfor %}
+    <div class="app-card">
+        <header>
+            <div class="brand">
+                <h1>Sudoku</h1>
+                <span class="subtitle">Solver & Player</span>
             </div>
-        </div>
-
-        <div id="buttons">
-            <button id="solve-btn" class="btn btn-primary">
-                <span class="btn-text">Solve</span>
-                <span class="spinner" hidden></span>
+            <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark/light mode" title="Toggle theme">
+                <!-- Sun SVG -->
+                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                </svg>
+                <!-- Moon SVG -->
+                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                </svg>
             </button>
-            <button id="clear-btn" class="btn btn-secondary">Clear</button>
-            <button id="random-btn" class="btn btn-accent">Random Puzzle</button>
-        </div>
+        </header>
 
-        <div id="status" aria-live="polite">Enter numbers or generate a puzzle</div>
+        <main>
+            <div class="difficulty-selector">
+                <button class="diff-btn" data-diff="easy">Easy</button>
+                <button class="diff-btn active" data-diff="medium">Medium</button>
+                <button class="diff-btn" data-diff="hard">Hard</button>
+            </div>
+
+            <div id="grid-wrapper">
+                <div id="grid">
+                    {% for box_row in range(3) %}
+                        {% for box_col in range(3) %}
+                            <div class="box" data-box="{{ box_row }}-{{ box_col }}">
+                                {% for cell_row in range(3) %}
+                                    {% for cell_col in range(3) %}
+                                        {% set r = box_row * 3 + cell_row %}
+                                        {% set c = box_col * 3 + cell_col %}
+                                        <input
+                                            type="text"
+                                            inputmode="numeric"
+                                            maxlength="1"
+                                            id="cell-{{ r }}-{{ c }}"
+                                            data-row="{{ r }}"
+                                            data-col="{{ c }}"
+                                            autocomplete="off"
+                                        >
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <div id="buttons">
+                <button id="solve-btn" class="btn btn-primary">
+                    <span class="btn-text">Solve</span>
+                    <span class="spinner" hidden></span>
+                </button>
+                <button id="reset-btn" class="btn btn-secondary">Reset</button>
+                <button id="clear-btn" class="btn btn-secondary">Clear</button>
+                <button id="new-game-btn" class="btn btn-accent">New Game</button>
+            </div>
+        </main>
+
+        <footer>
+            <div id="status" aria-live="polite">Ready to solve or play!</div>
+        </footer>
     </div>
 </body>
 </html>

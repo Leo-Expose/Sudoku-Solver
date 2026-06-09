@@ -55,12 +55,16 @@
     color-scheme: dark;
 }
 
+html,
+body {
+    height: 100vh;
+    overflow: hidden;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     background-color: var(--color-bg);
     color: var(--color-text);
-    min-height: 100vh;
-    overflow-x: hidden;
     position: relative;
     line-height: 1.6;
     transition: background-color 0.2s ease, color 0.2s ease;
@@ -71,9 +75,10 @@ body {
     position: relative;
     z-index: 1;
     display: flex;
-    min-height: 100vh;
-    max-width: 1300px;
-    margin: 0 auto;
+    height: 100vh;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
 }
 
 /* ── Main Area ── */
@@ -84,11 +89,13 @@ body {
     padding: 48px 48px 48px;
     align-items: center;
     justify-content: center;
+    height: 100%;
+    overflow-y: auto;
 }
 
 .studio-header {
     width: 100%;
-    max-width: 530px;
+    max-width: 524px;
     margin-bottom: 20px;
     text-align: left;
 }
@@ -845,9 +852,16 @@ kbd {
 
 /* ── Responsive Stack ── */
 @media (max-width: 960px) {
+    html,
+    body {
+        height: auto;
+        overflow: auto;
+    }
+
     .app-layout {
         flex-direction: column;
         height: auto;
+        overflow: visible;
     }
     
     .sidebar {
@@ -864,12 +878,18 @@ kbd {
     .main-content {
         padding: 40px 24px;
         justify-content: flex-start;
+        height: auto;
+        overflow-y: visible;
     }
 }
 
 @media (max-width: 600px) {
     .main-content {
         padding: 28px 16px;
+    }
+    
+    .studio-header {
+        max-width: 382px;
     }
     
     .brand-title {
@@ -916,6 +936,10 @@ kbd {
 }
 
 @media (max-width: 410px) {
+    .studio-header {
+        max-width: 337px;
+    }
+
     .box {
         grid-template-columns: repeat(3, 33px);
         grid-template-rows: repeat(3, 33px);
@@ -952,6 +976,10 @@ kbd {
 }
 
 @media (max-width: 350px) {
+    .studio-header {
+        max-width: 292px;
+    }
+
     .box {
         grid-template-columns: repeat(3, 28px);
         grid-template-rows: repeat(3, 28px);

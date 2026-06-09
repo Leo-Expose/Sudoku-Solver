@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimal Sudoku Solver</title>
+    <title>Sudoku</title>
+    <meta name="description" content="A beautiful, minimal Sudoku solver, generator, and analytical workspace.">
     <meta id="color-meta" name="color-scheme" content="light dark">
     <script>
         {
@@ -19,73 +20,208 @@
     <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
 </head>
 <body>
-    <div class="app-card">
-        <header>
-            <div class="brand">
-                <h1>Sudoku</h1>
-                <span class="subtitle">Solver & Player</span>
-            </div>
-            <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark/light mode" title="Toggle theme">
-                <!-- Sun SVG -->
-                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="4"></circle>
-                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-                </svg>
-                <!-- Moon SVG -->
-                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-                </svg>
-            </button>
-        </header>
+    <!-- Subtle ambient warm light spotlight -->
+    <div class="ambient-spotlight"></div>
 
-        <main>
-            <div class="difficulty-selector">
-                <button class="diff-btn" data-diff="easy">Easy</button>
-                <button class="diff-btn active" data-diff="medium">Medium</button>
-                <button class="diff-btn" data-diff="hard">Hard</button>
-            </div>
+    <div class="app-layout">
+        <!-- Main Area: Header, Grid -->
+        <main class="main-content scroll-reveal">
+            <header class="studio-header">
+                <h1 class="brand-title">Sudoku</h1>
+            </header>
 
-            <div id="grid-wrapper">
-                <div id="grid">
-                    {% for box_row in range(3) %}
-                        {% for box_col in range(3) %}
-                            <div class="box" data-box="{{ box_row }}-{{ box_col }}">
-                                {% for cell_row in range(3) %}
-                                    {% for cell_col in range(3) %}
+            <div class="grid-panel">
+                <div id="grid-wrapper">
+                    <span class="complete-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        Complete
+                    </span>
+                    <div id="grid">
+                        {% for box_row in range(3) %}
+                            {% for box_col in range(3) %}
+                                <div class="box" data-box="{{ box_row }}-{{ box_col }}">
+                                    {% for cell_row in range(3) %}
                                         {% set r = box_row * 3 + cell_row %}
-                                        {% set c = box_col * 3 + cell_col %}
-                                        <input
-                                            type="text"
-                                            inputmode="numeric"
-                                            maxlength="1"
-                                            id="cell-{{ r }}-{{ c }}"
-                                            data-row="{{ r }}"
-                                            data-col="{{ c }}"
-                                            autocomplete="off"
-                                        >
+                                        {% for cell_col in range(3) %}
+                                            {% set c = box_col * 3 + cell_col %}
+                                            <div class="cell-container" data-row="{{ r }}" data-col="{{ c }}">
+                                                <input
+                                                    type="text"
+                                                    inputmode="numeric"
+                                                    maxlength="1"
+                                                    id="cell-{{ r }}-{{ c }}"
+                                                    data-row="{{ r }}"
+                                                    data-col="{{ c }}"
+                                                    autocomplete="off"
+                                                    class="cell-input"
+                                                >
+                                                <div class="notes-grid" id="notes-{{ r }}-{{ c }}">
+                                                    <span>1</span><span>2</span><span>3</span>
+                                                    <span>4</span><span>5</span><span>6</span>
+                                                    <span>7</span><span>8</span><span>9</span>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
                                     {% endfor %}
-                                {% endfor %}
-                            </div>
+                                </div>
+                            {% endfor %}
                         {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar Panel: Timer, Actions, Tracker -->
+        <aside class="sidebar scroll-reveal">
+            <!-- Section 1: Timer Card -->
+            <div class="bento-card timer-card">
+                <div class="timer-header">
+                    <span class="card-label">Elapsed Time</span>
+                    <span id="game-difficulty-badge" class="badge badge-neutral">No game</span>
+                </div>
+                <div class="timer-display">
+                    <span id="timer-val">00:00</span>
+                </div>
+                <div class="timer-controls">
+                    <button id="timer-toggle-btn" class="btn btn-secondary btn-sm" title="Pause Game">
+                        <svg class="play-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display: none;"><path d="M5 3l14 9-14 9V3z"/></svg>
+                        <svg class="pause-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+                        <span id="timer-toggle-text">Pause</span>
+                    </button>
+                    <button id="timer-reset-btn" class="btn btn-secondary btn-sm" title="Restart Timer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5"/></svg>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section 2: Actions Bento Card -->
+            <div class="bento-card actions-card">
+                <span class="card-label">Controls & Operations</span>
+                
+                <div class="action-grid">
+                    <button id="solve-btn" class="btn btn-primary" title="Solve puzzle using backtracking solver">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        <span class="btn-text">Solve</span>
+                        <span class="spinner" hidden></span>
+                    </button>
+
+                    <button id="pencil-btn" class="btn btn-secondary" title="Toggle Pencil Notes Mode (Key: N)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        Notes: <span class="notes-status-indicator">OFF</span>
+                    </button>
+                </div>
+
+                <div class="action-grid-three">
+                    <button id="undo-btn" class="btn btn-secondary btn-sm" title="Undo Move (Key: U)" disabled>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7v6h6M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                        Undo
+                    </button>
+                    <button id="redo-btn" class="btn btn-secondary btn-sm" title="Redo Move (Key: R)" disabled>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 7v6h-6M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+                        Redo
+                    </button>
+                    <button id="reset-btn" class="btn btn-secondary btn-sm" title="Reset current progress">Reset</button>
+                </div>
+
+                <div class="action-grid-two">
+                    <div class="new-game-group">
+                        <button id="new-game-btn" class="btn btn-accent">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                            New Puzzle
+                        </button>
+                        <div id="difficulty-flyout" class="difficulty-flyout" hidden>
+                            <span class="flyout-label">Select Difficulty</span>
+                            <div class="flyout-options">
+                                <button class="diff-btn" data-diff="easy">Easy</button>
+                                <button class="diff-btn" data-diff="medium">Medium</button>
+                                <button class="diff-btn" data-diff="hard">Hard</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="clear-btn" class="btn btn-secondary" title="Clear entire grid">Clear Grid</button>
+                </div>
+            </div>
+
+            <!-- Section 3: Numbers Remaining Tracker (Moved to Sidebar) -->
+            <div class="bento-card tracker-card">
+                <span class="card-label">Remaining Placement Tracker</span>
+                <div class="tracker-digits" id="number-tracker">
+                    {% for n in range(1, 10) %}
+                        <button class="tracker-digit-btn" data-digit="{{ n }}" title="Highlight all {{ n }}s">
+                            <span class="digit-num">{{ n }}</span>
+                            <span class="digit-count" id="digit-count-{{ n }}">9</span>
+                        </button>
                     {% endfor %}
                 </div>
             </div>
 
-
-            <div id="buttons">
-                <button id="solve-btn" class="btn btn-primary">
-                    <span class="btn-text">Solve</span>
-                    <span class="spinner" hidden></span>
+            <!-- Section 4: Sidebar Footer -->
+            <footer class="sidebar-footer">
+                <div id="status" aria-live="polite">Workspace ready</div>
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" title="Toggle theme">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                    </svg>
                 </button>
-                <button id="reset-btn" class="btn btn-secondary">Reset</button>
-                <button id="clear-btn" class="btn btn-secondary">Clear</button>
-                <button id="new-game-btn" class="btn btn-accent">New Game</button>
-            </div>
-        </main>
+            </footer>
+        </aside>
+    </div>
 
-        <footer>
-            <div id="status" aria-live="polite">Ready to solve or play!</div>
-        </footer>
+    <!-- Pause Screen overlay -->
+    <div id="pause-overlay" class="pause-overlay" hidden>
+        <div class="pause-content">
+            <h2 class="pause-title">Puzzle Paused</h2>
+            <p class="pause-subtitle">Workspace and grid are hidden while paused.</p>
+            <button id="resume-btn" class="btn btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                Resume Workspace
+            </button>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal Dialog -->
+    <div id="shortcuts-modal" class="modal-overlay" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="card-label">Keyboard Guides</span>
+                <button id="close-modal-btn" class="modal-close-btn" title="Close guide (Esc)">&times;</button>
+            </div>
+            <div class="guide-list">
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>▲</kbd><kbd>▼</kbd><kbd>◀</kbd><kbd>▶</kbd><span class="guide-separator">/</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>
+                    <span class="guide-desc">Navigate grid</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>1</kbd>-<kbd>9</kbd></span>
+                    <span class="guide-desc">Input value/note</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>Del</kbd><span class="guide-separator">/</span><kbd>Backspace</kbd></span>
+                    <span class="guide-desc">Clear cell value</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>N</kbd><span class="guide-separator">/</span><kbd>Shift</kbd></span>
+                    <span class="guide-desc">Toggle Pencil Mode</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>U</kbd><span class="guide-separator">/</span><kbd>R</kbd></span>
+                    <span class="guide-desc">Undo / Redo move</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>Space</kbd></span>
+                    <span class="guide-desc">Pause / Resume timer</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>?</kbd> / <kbd>Shift</kbd>+<kbd>?</kbd></span>
+                    <span class="guide-desc">Show keyboard guide</span>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

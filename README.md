@@ -27,7 +27,7 @@ source venv/bin/activate   # Linux/macOS
 venv\Scripts\activate      # Windows
 
 pip install -r requirements.txt
-python Solver.py
+python app.py
 ```
 
 Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.

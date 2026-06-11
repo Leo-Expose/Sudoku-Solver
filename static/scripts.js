@@ -14,22 +14,51 @@ document.addEventListener("DOMContentLoaded", () => {
     const shortcutsModal = document.getElementById("shortcuts-modal");
     const closeModalBtn = document.getElementById("close-modal-btn");
 
+    let modalTimerPaused = false; // tracks if WE paused the timer on modal open
+
+    function openShortcutsModal() {
+        if (!shortcutsModal) return;
+        shortcutsModal.hidden = false;
+        // Silently pause the timer while help is open (no overlay)
+        if (gameActive && !isPaused && timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            modalTimerPaused = true;
+        }
+    }
+
+    function closeShortcutsModal() {
+        if (!shortcutsModal) return;
+        shortcutsModal.hidden = true;
+        // Resume the timer if we paused it
+        if (modalTimerPaused) {
+            modalTimerPaused = false;
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+    }
+
     function toggleShortcutsModal() {
-        if (shortcutsModal) {
-            shortcutsModal.hidden = !shortcutsModal.hidden;
+        if (!shortcutsModal) return;
+        if (shortcutsModal.hidden) {
+            openShortcutsModal();
+        } else {
+            closeShortcutsModal();
         }
     }
 
     if (closeModalBtn) {
         closeModalBtn.addEventListener("click", () => {
-            shortcutsModal.hidden = true;
+            closeShortcutsModal();
         });
     }
 
     if (shortcutsModal) {
         shortcutsModal.addEventListener("click", (e) => {
             if (e.target === shortcutsModal) {
-                shortcutsModal.hidden = true;
+                closeShortcutsModal();
             }
         });
     }
@@ -192,23 +221,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- Notes Mode Logic ---
-    const pencilBtn = document.getElementById("pencil-btn");
+    const normalBtn = document.getElementById("mode-normal-btn");
+    const notesBtn = document.getElementById("mode-notes-btn");
     
-    function toggleNotesMode() {
-        notesMode = !notesMode;
-        const indicator = pencilBtn.querySelector(".notes-status-indicator");
+    function setNotesMode(value) {
+        notesMode = value;
         if (notesMode) {
-            pencilBtn.classList.add("notes-active-btn");
-            indicator.textContent = "ON";
+            if (normalBtn) normalBtn.classList.remove("active");
+            if (notesBtn) notesBtn.classList.add("active");
         } else {
-            pencilBtn.classList.remove("notes-active-btn");
-            indicator.textContent = "OFF";
+            if (normalBtn) normalBtn.classList.add("active");
+            if (notesBtn) notesBtn.classList.remove("active");
         }
     }
 
-    pencilBtn.addEventListener("click", () => {
-        toggleNotesMode();
-    });
+    function toggleNotesMode() {
+        setNotesMode(!notesMode);
+    }
+
+    if (normalBtn) {
+        normalBtn.addEventListener("click", () => {
+            setNotesMode(false);
+        });
+    }
+    if (notesBtn) {
+        notesBtn.addEventListener("click", () => {
+            setNotesMode(true);
+        });
+    }
 
     function updateNotesUI(r, c) {
         const container = document.getElementById(`notes-${r}-${c}`);
@@ -262,11 +302,9 @@ document.addEventListener("DOMContentLoaded", () => {
         clearCompletion();
         checkConflicts();
         updateRemainingTracker();
+        // Re-apply same-number highlights after undo/redo
         if (activeCell) {
             highlightSameNumbers(activeCell);
-            const activeR = parseInt(activeCell.dataset.row, 10);
-            const activeC = parseInt(activeCell.dataset.col, 10);
-            highlightRelatedCells(activeR, activeC);
         } else {
             highlightSameNumbers(null);
         }
@@ -359,7 +397,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setStatus(msg, type) {
         statusDiv.textContent = msg;
-        statusDiv.className = type || "";
+        if (type === "error" && msg === "Rule violation!") {
+            statusDiv.className = "error rule-violation";
+        } else {
+            statusDiv.className = type || "";
+        }
     }
 
     function setLoading(loading) {
@@ -367,6 +409,8 @@ document.addEventListener("DOMContentLoaded", () => {
         newGameBtn.disabled = loading;
         clearBtn.disabled = loading;
         resetBtn.disabled = loading;
+        if (normalBtn) normalBtn.disabled = loading;
+        if (notesBtn) notesBtn.disabled = loading;
         solveText.hidden = loading;
         solveSpinner.hidden = !loading;
 
@@ -504,12 +548,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!val) return;
 
-        const focusRow = cell ? parseInt(cell.dataset.row, 10) : -1;
-        const focusCol = cell ? parseInt(cell.dataset.col, 10) : -1;
-
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-                if (r === focusRow && c === focusCol) continue;
                 const other = document.getElementById(`cell-${r}-${c}`);
                 if (other.value === val) {
                     other.classList.add("highlight-same");
@@ -519,22 +559,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function highlightRelatedCells(focusRow, focusCol) {
-        document.querySelectorAll(".cell-container.highlight-axis").forEach(el => {
-            el.classList.remove("highlight-axis");
-        });
-
-        if (focusRow === null || focusCol === null || focusRow === undefined || focusCol === undefined) return;
-
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                if (r === focusRow && c === focusCol) continue;
-                if (r === focusRow || c === focusCol) {
-                    const cellContainer = document.getElementById(`cell-${r}-${c}`).parentElement;
-                    cellContainer.classList.add("highlight-axis");
-                }
-            }
-        }
+        // Axis/crosshair highlighting removed — use tracker for same-number selection
     }
+
 
     // --- Remaining Placements Tracker Engine ---
     function updateRemainingTracker() {
@@ -586,18 +613,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("grid").addEventListener("focusin", (e) => {
         if (e.target.tagName === "INPUT") {
             activeCell = e.target;
-            const r = parseInt(activeCell.dataset.row, 10);
-            const c = parseInt(activeCell.dataset.col, 10);
             highlightSameNumbers(activeCell);
-            highlightRelatedCells(r, c);
         }
     });
 
     document.getElementById("grid").addEventListener("focusout", () => {
         setTimeout(() => {
             if (!document.activeElement || document.activeElement.tagName !== "INPUT") {
-                highlightSameNumbers(null);
-                highlightRelatedCells(null, null);
+                // Only clear highlights if no tracker filter is active
+                if (!activeFilterDigit) {
+                    highlightSameNumbers(null);
+                }
             }
         }, 120);
     });
@@ -731,7 +757,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Close modal on Escape even when typing
         if (e.key === "Escape") {
             if (shortcutsModal && !shortcutsModal.hidden) {
-                shortcutsModal.hidden = true;
+                closeShortcutsModal();
                 return;
             }
         }

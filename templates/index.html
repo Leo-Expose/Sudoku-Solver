@@ -109,10 +109,10 @@
                         <span class="spinner" hidden></span>
                     </button>
 
-                    <button id="pencil-btn" class="btn btn-secondary" title="Toggle Pencil Notes Mode (Key: N)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                        Notes: <span class="notes-status-indicator">OFF</span>
-                    </button>
+                    <div class="segmented-control" id="notes-segmented-control">
+                        <button class="seg-btn active" id="mode-normal-btn" type="button" title="Normal Input Mode (Key: N)">Normal</button>
+                        <button class="seg-btn" id="mode-notes-btn" type="button" title="Pencil Notes Mode (Key: N)">Notes</button>
+                    </div>
                 </div>
 
                 <div class="action-grid-three">
@@ -151,7 +151,7 @@
                 <span class="card-label">Placement Tracker</span>
                 <div class="tracker-digits" id="number-tracker">
                     {% for n in range(1, 10) %}
-                        <button class="tracker-digit-btn" data-digit="{{ n }}" title="Highlight all {{ n }}s">
+                        <button class="tracker-digit-btn tracker-digit" data-digit="{{ n }}" title="Highlight all {{ n }}s">
                             <span class="digit-num">{{ n }}</span>
                             <span class="digit-count" id="digit-count-{{ n }}">9</span>
                         </button>
@@ -179,10 +179,10 @@
     <div id="pause-overlay" class="pause-overlay" hidden>
         <div class="pause-content">
             <h2 class="pause-title">Puzzle Paused</h2>
-            <p class="pause-subtitle">Workspace and grid are hidden while paused.</p>
+            <p class="pause-subtitle">Grid is hidden while paused.</p>
             <button id="resume-btn" class="btn btn-primary">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
-                Resume Workspace
+                Resume
             </button>
         </div>
     </div>

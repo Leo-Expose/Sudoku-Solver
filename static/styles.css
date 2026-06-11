@@ -10,23 +10,25 @@
 
 /* ── Design Tokens ── */
 :root {
-    /* 4-level shade hierarchy (light → dark = deepest) */
-    --color-bg:       #DEDEDB; /* Level 0: page canvas — clearly gray */
-    --color-surface:  #F0F0ED; /* Level 1: sidebar, grid-wrapper outer frame */
-    --color-card:     #FAFAFA; /* Level 2: bento cards, flyouts */
-    --color-cell:     #FFFFFF; /* Level 3: grid cells — purest white */
-    --color-cell-shaded: #F0F4F8; /* Shaded checkerboard blocks — very light blue/gray */
+    /* Curated, harmonious, premium cool/neutral gray palette */
+    --color-bg:       #EAECEF; /* Level 0: page canvas - clean slate gray */
+    --color-surface:  #F3F4F6; /* Level 1: sidebar, grid-wrapper outer frame */
+    --color-card:     #FFFFFF; /* Level 2: bento cards, flyouts - pure white to pop */
+    --color-cell:     #FFFFFF; /* Level 3: grid cells - purest white inside grid */
+    --color-cell-shaded: #F8FAFC; /* Shaded checkerboard blocks - ultra soft cool tint */
 
-    --color-border:   #C8C8C4;
-    --color-text:     #111111;
-    --color-text-muted: #767673;
+    --color-border:   #D1D5DB; /* Clean border */
+    --color-text:     #1F2937; /* Rich charcoal text */
+    --color-text-muted: #6B7280;
 
-    --grid-line-thick: #111111;
-    --grid-line-thin:  #CBCBC7; /* visible between cells, matches border tone */
+    --grid-line-thick: #1F2937;
+    --grid-line-thin:  #E5E7EB; /* visible between cells */
 
     --cell-highlight-same:    #C2DBFA; /* Soft clear blue for active cell and same digits */
     --cell-highlight-axis:    #E8F0FE; /* Soft light blue/gray for crosshair row/column */
     --cell-highlight-block:   #E8F0FE; /* Unified soft light blue/gray for crosshair 3x3 block */
+
+    --color-accent-blue: #0F62FE; /* IBM Blue */
 
     --radius-sm: 4px;
     --radius-md: 6px;
@@ -38,23 +40,25 @@
 }
 
 :root[data-theme="dark"] {
-    /* 4-level shade hierarchy (dark → light = deepest) */
-    --color-bg:       #0C0C0C; /* Level 0: page canvas — near black */
-    --color-surface:  #161616; /* Level 1: sidebar, grid-wrapper */
-    --color-card:     #202020; /* Level 2: bento cards */
-    --color-cell:     #2A2A2A; /* Level 3: grid cells — lightest surface */
-    --color-cell-shaded: #1E2226; /* Shaded checkerboard blocks — slightly darker cool gray */
+    /* Curated, deep slate dark mode palette */
+    --color-bg:       #0B0F19; /* Level 0: page canvas - deep slate blue/black */
+    --color-surface:  #111827; /* Level 1: sidebar, grid-wrapper */
+    --color-card:     #1F2937; /* Level 2: bento cards */
+    --color-cell:     #1F2937; /* Level 3: grid cells */
+    --color-cell-shaded: #182030; /* Shaded checkerboard blocks - slightly darker slate tint */
 
-    --color-border:   #303030;
-    --color-text:     #E5E5E5;
-    --color-text-muted: #8C8C8C;
+    --color-border:   #374151;
+    --color-text:     #F9FAFB;
+    --color-text-muted: #9CA3AF;
 
-    --grid-line-thick: #E5E5E5;
-    --grid-line-thin:  #303030;
+    --grid-line-thick: #F9FAFB;
+    --grid-line-thin:  #374151;
 
-    --cell-highlight-same:    #2A3F64; /* Rich blue — pops against cell background */
-    --cell-highlight-axis:    #1B202B; /* Dark blue-gray, deeper than shaded cells */
-    --cell-highlight-block:   #171C25; /* Slightly cooler/darker than axis for distinction */
+    --cell-highlight-same:    rgba(224, 157, 217, 0.22); /* Translucent pink — matches light mode feel */
+    --cell-highlight-axis:    rgba(199, 140, 197, 0.18);
+    --cell-highlight-block:   rgba(179, 116, 177, 0.14);
+
+    --color-accent-blue: #E09DD9; /* Softer pastel pink accent for dark mode */
 
     color-scheme: dark;
 }
@@ -184,7 +188,8 @@ body {
 }
 
 .cell-input:focus {
-    background-color: var(--cell-highlight-same);
+    background-color: var(--color-cell);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-blue) 35%, transparent);
     font-weight: 600;
 }
 
@@ -197,18 +202,18 @@ body {
     background-color: var(--cell-highlight-block);
 }
 
-.cell-input.highlight-same {
-    background-color: var(--cell-highlight-same);
+/* Given (board-generated) numbers: accent blue, clearly distinct from user entries */
+.cell-input.given {
+    background-color: transparent;
+    color: var(--color-accent-blue);
     font-weight: 700;
 }
 
-.cell-input.given {
-    background-color: rgba(0, 0, 0, 0.03); /* very slightly tinted vs plain cell */
-    color: var(--color-text);
+/* highlight-same must come AFTER given — same specificity, last rule wins.
+   This ensures given cells also receive the highlight background. */
+.cell-input.highlight-same {
+    background-color: var(--cell-highlight-same);
     font-weight: 700;
-}
-[data-theme="dark"] .cell-input.given {
-    background-color: rgba(255, 255, 255, 0.04);
 }
 
 .cell-input.solved {
@@ -302,20 +307,28 @@ body {
     border-radius: var(--radius-sm);
     background-color: var(--color-surface); /* L1: sits inside card (L2) */
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
     padding: 0;
     margin: 0;
     outline: none;
     box-sizing: border-box;
 }
 
-.tracker-digit-btn:hover {
+.tracker-digit-btn:hover,
+.tracker-digit:hover {
     border-color: var(--color-text-muted);
-    background-color: var(--color-card);
+    background-color: rgba(224, 157, 217, 0.08); /* gentle pink tint */
 }
 
-.tracker-digit-btn:active {
-    transform: scale(0.96);
+[data-theme="dark"] .tracker-digit-btn:hover,
+[data-theme="dark"] .tracker-digit:hover {
+    border-color: var(--color-text-muted);
+    background-color: rgba(224, 157, 217, 0.08); /* gentle pink tint */
+}
+
+.tracker-digit-btn:active,
+.tracker-digit:active {
+    transform: scale(0.98);
 }
 
 .tracker-digit-btn .digit-num {
@@ -348,9 +361,31 @@ body {
 }
 
 /* Highlight state when filter is active */
+.tracker-digit.active-filter,
 .tracker-digit-btn.active-filter {
-    border-color: var(--color-text);
-    background-color: var(--color-card);
+    background-color: var(--color-accent-blue) !important;
+    border-color: var(--color-accent-blue) !important;
+}
+
+.tracker-digit.active-filter .digit-num,
+.tracker-digit-btn.active-filter .digit-num {
+    color: #FFFFFF !important;
+    font-weight: 600;
+}
+
+.tracker-digit.active-filter .digit-count,
+.tracker-digit-btn.active-filter .digit-count {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-theme="dark"] .tracker-digit.active-filter .digit-num,
+[data-theme="dark"] .tracker-digit-btn.active-filter .digit-num {
+    color: #0B0F19 !important; /* dark canvas color for contrast */
+}
+
+[data-theme="dark"] .tracker-digit.active-filter .digit-count,
+[data-theme="dark"] .tracker-digit-btn.active-filter .digit-count {
+    color: rgba(11, 15, 25, 0.85) !important;
 }
 
 /* ── Sidebar ── */
@@ -439,9 +474,9 @@ body {
 
 /* Action Grids */
 .action-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     margin-top: 8px;
 }
 
@@ -471,11 +506,13 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
     padding: 0 10px;
     border: 1px solid var(--color-border);
     background-color: var(--color-card); /* L2: buttons sit on card layer */
     color: var(--color-text);
+    white-space: nowrap;
+    text-wrap: nowrap;
 }
 
 .btn-sm {
@@ -506,12 +543,12 @@ body {
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: #333333;
-    border-color: #333333;
+    background-color: #374151;
+    border-color: #374151;
 }
 [data-theme="dark"] .btn-primary:hover:not(:disabled) {
-    background-color: #CCCCCC;
-    border-color: #CCCCCC;
+    background-color: #D1D5DB;
+    border-color: #D1D5DB;
 }
 
 .btn-secondary {
@@ -531,36 +568,60 @@ body {
     border-color: var(--color-text);
 }
 
-/* Pencil Button State (Inverted fill instead of blue) */
-.btn.notes-active-btn {
-    background-color: var(--color-text);
-    border-color: var(--color-text);
-    color: var(--color-bg);
-}
-.btn.notes-active-btn:hover:not(:disabled) {
-    background-color: #333333;
-    border-color: #333333;
-}
-[data-theme="dark"] .btn.notes-active-btn:hover:not(:disabled) {
-    background-color: #CCCCCC;
-    border-color: #CCCCCC;
+/* ── Segmented Control (Mode Switch) ── */
+.segmented-control {
+    display: flex;
+    width: 100%;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+    height: 36px;
+    box-sizing: border-box;
 }
 
-.notes-status-indicator {
-    font-size: 0.58rem;
-    font-weight: 700;
-    padding: 2px 4px;
-    border-radius: 2px;
-    margin-left: 2px;
-    background-color: rgba(0, 0, 0, 0.05);
+.seg-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 500;
     color: var(--color-text-muted);
+    border-radius: calc(var(--radius-sm) - 1px);
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
+    height: 100%;
+    padding: 0 12px; /* give more breathing room */
+    white-space: nowrap;
+    text-wrap: nowrap;
 }
-.notes-active-btn .notes-status-indicator {
-    background-color: var(--color-bg);
+
+.seg-btn:hover:not(:disabled) {
     color: var(--color-text);
+    background-color: rgba(224, 157, 217, 0.08); /* gentle pink tint */
 }
-[data-theme="dark"] .notes-status-indicator {
-    background-color: rgba(255, 255, 255, 0.05);
+
+[data-theme="dark"] .seg-btn:hover:not(:disabled) {
+    background-color: rgba(224, 157, 217, 0.08); /* gentle pink tint */
+}
+
+.seg-btn:active:not(:disabled) {
+    transform: scale(0.99);
+}
+
+.seg-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.seg-btn.active {
+    background-color: var(--color-text);
+    color: var(--color-bg);
+    font-weight: 600;
 }
 
 /* Difficulty dropdown inside sidebar */
@@ -1081,4 +1142,34 @@ kbd {
 
 .modal-close-btn:hover {
     color: var(--color-text);
+}
+
+/* ── Rule Violation Message ── */
+.rule-violation {
+    background-color: #FDEBEC;
+    color: #9F2F2D;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+[data-theme="dark"] .rule-violation {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #FCA5A5;
+}
+
+/* ── Ambient Spotlight Glow ── */
+.ambient-spotlight {
+    position: fixed;
+    top: -10%;
+    left: -10%;
+    width: 50vw;
+    height: 50vh;
+    background: radial-gradient(circle, rgba(15, 98, 254, 0.05) 0%, rgba(15, 98, 254, 0) 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+[data-theme="dark"] .ambient-spotlight {
+    background: radial-gradient(circle, rgba(63, 140, 255, 0.04) 0%, rgba(63, 140, 255, 0) 70%);
 }

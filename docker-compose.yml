@@ -1,0 +1,7 @@
+services:
+  sudoku-solver:
+    container_name: Sudoku
+    build: .
+    ports:
+      - "5000:5000"
+    restart: unless-stopped

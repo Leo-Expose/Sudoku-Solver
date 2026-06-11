@@ -52,9 +52,9 @@
     --grid-line-thick: #E5E5E5;
     --grid-line-thin:  #303030;
 
-    --cell-highlight-same:    #3C4759; /* Distinct slate blue for active/same cell */
-    --cell-highlight-axis:    #2D333F; /* Soft blue-gray highlight for crosshair row/column */
-    --cell-highlight-block:   #2D333F; /* Unified soft blue-gray highlight for crosshair 3x3 block */
+    --cell-highlight-same:    #2A3F64; /* Rich blue — pops against cell background */
+    --cell-highlight-axis:    #1B202B; /* Dark blue-gray, deeper than shaded cells */
+    --cell-highlight-block:   #171C25; /* Slightly cooler/darker than axis for distinction */
 
     color-scheme: dark;
 }

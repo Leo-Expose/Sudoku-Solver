@@ -522,29 +522,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".cell-container.highlight-axis").forEach(el => {
             el.classList.remove("highlight-axis");
         });
-        document.querySelectorAll(".cell-container.highlight-block").forEach(el => {
-            el.classList.remove("highlight-block");
-        });
 
         if (focusRow === null || focusCol === null || focusRow === undefined || focusCol === undefined) return;
-
-        const boxR = 3 * Math.floor(focusRow / 3);
-        const boxC = 3 * Math.floor(focusCol / 3);
 
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
                 if (r === focusRow && c === focusCol) continue;
-                
-                const isAxis = (r === focusRow || c === focusCol);
-                const isBlock = (r >= boxR && r < boxR + 3 && c >= boxC && c < boxC + 3);
-
-                if (isAxis || isBlock) {
+                if (r === focusRow || c === focusCol) {
                     const cellContainer = document.getElementById(`cell-${r}-${c}`).parentElement;
-                    if (isAxis) {
-                        cellContainer.classList.add("highlight-axis");
-                    } else if (isBlock) {
-                        cellContainer.classList.add("highlight-block");
-                    }
+                    cellContainer.classList.add("highlight-axis");
                 }
             }
         }

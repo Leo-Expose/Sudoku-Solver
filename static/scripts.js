@@ -542,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", () => {
             const difficulty = btn.dataset.diff;
             closeFlyout();
-            generatePuzzle(difficulty);
+            generatePuzzleUI(difficulty);
         });
     });
 
@@ -954,26 +954,16 @@ document.addEventListener("DOMContentLoaded", () => {
         setLoading(true);
         setStatus("Solving…", "");
 
-        try {
-            const res = await fetch("/solve", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ grid }),
-            });
-            const data = await res.json();
-
-            if (data.solution) {
-                setStatus("Solved!", "success");
-                await animateSolution(grid, data.solution);
-                checkCompletion();
-            } else {
-                setStatus(data.error || "No solution", "error");
-            }
-        } catch {
-            setStatus("Network error", "error");
-        } finally {
-            setLoading(false);
+        // ponytail: client-side solver, no fetch needed
+        const board = grid.map(row => [...row]);
+        if (Sudoku.solveSudoku(board)) {
+            setStatus("Solved!", "success");
+            await animateSolution(grid, board);
+            checkCompletion();
+        } else {
+            setStatus("No solution exists for this puzzle", "error");
         }
+        setLoading(false);
     });
 
     async function animateSolution(original, solution) {
@@ -1061,7 +1051,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // --- Generate ---
-    async function generatePuzzle(difficulty) {
+    async function generatePuzzleUI(difficulty) {
         setLoading(true);
         setStatus("Generating…", "");
         resetTimer();
@@ -1072,54 +1062,46 @@ document.addEventListener("DOMContentLoaded", () => {
         updateMistakeDisplay();
         updateHintDisplay();
 
-        try {
-            const res = await fetch(`/generate?difficulty=${difficulty}`);
-            const data = await res.json();
+        // ponytail: client-side generation, no fetch needed
+        const clueMap = { easy: 45, medium: 36, hard: 28 };
+        const puzzle = Sudoku.generatePuzzle(clueMap[difficulty]);
 
-            if (data.puzzle) {
-                for (let r = 0; r < 9; r++) {
-                    for (let c = 0; c < 9; c++) {
-                        const cell = document.getElementById(`cell-${r}-${c}`);
-                        cell.value = "";
-                        cell.className = "cell-input";
-                        cell.readOnly = false;
-                        cellNotes[r][c].clear();
-                        updateNotesUI(r, c);
-                    }
-                }
-
-                for (let r = 0; r < 9; r++) {
-                    for (let c = 0; c < 9; c++) {
-                        if (data.puzzle[r][c] !== 0) {
-                            const cell = document.getElementById(`cell-${r}-${c}`);
-                            cell.value = data.puzzle[r][c];
-                            cell.className = "cell-input given has-value";
-                            cell.readOnly = true;
-                        }
-                    }
-                }
-                clearCompletion();
-                checkConflicts();
-                updateRemainingTracker();
-                highlightSameNumbers(null);
-
-                setDifficultyBadge(difficulty);
-
-                historyStack = [];
-                historyIndex = -1;
-                saveHistory();
-
-                gameActive = true;
-                startTimer();
-                setStatus(`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} puzzle`, "success");
-            } else {
-                setStatus("Generation error", "error");
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const cell = document.getElementById(`cell-${r}-${c}`);
+                cell.value = "";
+                cell.className = "cell-input";
+                cell.readOnly = false;
+                cellNotes[r][c].clear();
+                updateNotesUI(r, c);
             }
-        } catch {
-            setStatus("Network error", "error");
-        } finally {
-            setLoading(false);
         }
+
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (puzzle[r][c] !== 0) {
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    cell.value = puzzle[r][c];
+                    cell.className = "cell-input given has-value";
+                    cell.readOnly = true;
+                }
+            }
+        }
+        clearCompletion();
+        checkConflicts();
+        updateRemainingTracker();
+        highlightSameNumbers(null);
+        
+        setDifficultyBadge(difficulty);
+        
+        historyStack = [];
+        historyIndex = -1;
+        saveHistory();
+        
+        gameActive = true;
+        startTimer();
+        setStatus(`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} puzzle`, "success");
+        setLoading(false);
     }
 
     // --- Hint Handler ---
@@ -1128,34 +1110,39 @@ document.addEventListener("DOMContentLoaded", () => {
         if (hintCount <= 0) return;
         const grid = getGrid();
         setLoading(true);
-        try {
-            const res = await fetch("/hint", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ grid }),
-            });
-            const data = await res.json();
-            if (data.error) {
-                setStatus(data.error, "error");
-            } else {
-                const cell = document.getElementById(`cell-${data.row}-${data.col}`);
-                cell.value = data.value;
-                cell.className = "cell-input hinted has-value";
-                cell.readOnly = false;
-                cellNotes[data.row][data.col].clear();
-                updateNotesUI(data.row, data.col);
-                updateRemainingTracker();
-                highlightSameNumbers(cell);
-                hintCount--;
-                updateHintDisplay();
-                saveHistory();
-                setStatus("Hint revealed!", "success");
-            }
-        } catch {
-            setStatus("Network error", "error");
-        } finally {
+        
+        // ponytail: client-side hint, no fetch needed
+        const board = grid.map(row => [...row]);
+        if (!Sudoku.solveSudoku(board)) {
+            setStatus("No solution exists for this puzzle", "error");
             setLoading(false);
+            return;
         }
+        const emptyCells = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === 0) emptyCells.push([r, c]);
+            }
+        }
+        if (!emptyCells.length) {
+            setStatus("No empty cells to hint", "error");
+            setLoading(false);
+            return;
+        }
+        const [r, c] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        const cell = document.getElementById(`cell-${r}-${c}`);
+        cell.value = board[r][c];
+        cell.className = "cell-input hinted has-value";
+        cell.readOnly = false;
+        cellNotes[r][c].clear();
+        updateNotesUI(r, c);
+        updateRemainingTracker();
+        highlightSameNumbers(cell);
+        hintCount--;
+        updateHintDisplay();
+        saveHistory();
+        setStatus("Hint revealed!", "success");
+        setLoading(false);
     });
 
     // --- Number Pad for Touch Devices ---

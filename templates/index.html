@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sudoku - Generate, Solve & Play Puzzles</title>
     <meta name="description" content="Generate, solve and play Sudoku puzzles with a beautiful interface. Features include pencil notes, undo/redo, difficulty levels, and keyboard shortcuts.">
-    <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <meta id="color-meta" name="color-scheme" content="light dark">
     <script>
         {
@@ -18,7 +18,7 @@
         }
     </script>
 
-    <link rel="preload" href="static/fonts/JetBrainsMono-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ url_for('static', filename='fonts/JetBrainsMono-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
 
     <style>
         @font-face {
@@ -26,14 +26,13 @@
             font-style: normal;
             font-weight: 400 700;
             font-display: swap;
-            src: url('static/fonts/JetBrainsMono-latin.woff2') format('woff2');
+            src: url('{{ url_for("static", filename="fonts/JetBrainsMono-latin.woff2") }}') format('woff2');
         }
     </style>
 
-    <link rel="stylesheet" href="static/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
-    <script src="static/sudoku.js"></script>
-    <script src="static/scripts.js" defer></script>
+    <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
 </head>
 <body>
     <div class="ambient-spotlight"></div>

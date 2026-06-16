@@ -73,18 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let historyStack = [];
     let historyIndex = -1;
 
-    // --- Scroll Reveal Animation ---
-    const revealElements = document.querySelectorAll(".scroll-reveal");
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add("revealed");
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.05 });
-    revealElements.forEach(el => observer.observe(el));
-
     // --- Theme Management ---
     function setTheme(theme) {
         document.documentElement.setAttribute("data-theme", theme);

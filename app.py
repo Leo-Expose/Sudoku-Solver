@@ -140,6 +140,29 @@ def generate():
     return jsonify({"puzzle": puzzle, "solution": solution})
 
 
+@app.route("/hint", methods=["POST"])
+def hint():
+    data = request.json
+    if not data or "grid" not in data:
+        return jsonify({"error": "Missing 'grid' field"}), 400
+    board = data["grid"]
+    if not isinstance(board, list) or len(board) != 9:
+        return jsonify({"error": "Grid must be a 9x9 array"}), 400
+    for row in board:
+        if not isinstance(row, list) or len(row) != 9:
+            return jsonify({"error": "Grid must be a 9x9 array"}), 400
+    if not all(isinstance(cell, int) and 0 <= cell <= 9 for row in board for cell in row):
+        return jsonify({"error": "All cells must be integers 0-9"}), 400
+    empty_cells = [(r, c) for r in range(9) for c in range(9) if board[r][c] == 0]
+    if not empty_cells:
+        return jsonify({"error": "No empty cells to hint"}), 400
+    solution = copy.deepcopy(board)
+    if not solve_sudoku(solution):
+        return jsonify({"error": "No solution exists for this puzzle"}), 422
+    r, c = random.choice(empty_cells)
+    return jsonify({"row": r, "col": c, "value": solution[r][c]})
+
+
 @app.errorhandler(404)
 def not_found(e):
     return jsonify({"error": "Not found"}), 404

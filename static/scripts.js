@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Resume the timer if we paused it
         if (modalTimerPaused) {
             modalTimerPaused = false;
+            if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 timerSeconds++;
                 updateTimerDisplay();
@@ -93,6 +94,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let cellNotes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
     let historyStack = [];
     let historyIndex = -1;
+    let mistakes = 0;
+    let hintCount = 3;
+    let currentDifficulty = null;
+    let lastConflictState = false;
 
     // --- Theme Management ---
     function setTheme(theme) {
@@ -334,6 +339,200 @@ document.addEventListener("DOMContentLoaded", () => {
         historyStack.push(getGridSnapshot());
         historyIndex++;
         updateHistoryButtons();
+        debouncedSaveGameState();
+    }
+
+    // --- Game State Persistence ---
+    let saveGameStateTimer = null;
+    function debouncedSaveGameState() {
+        if (saveGameStateTimer) clearTimeout(saveGameStateTimer);
+        saveGameStateTimer = setTimeout(saveGameState, 300);
+    }
+
+    function saveGameState() {
+        const grid = [];
+        const given = [];
+        for (let r = 0; r < 9; r++) {
+            const row = [];
+            const givenRow = [];
+            for (let c = 0; c < 9; c++) {
+                const cell = document.getElementById(`cell-${r}-${c}`);
+                row.push(cell.value ? parseInt(cell.value, 10) : 0);
+                givenRow.push(cell.classList.contains("given"));
+            }
+            grid.push(row);
+            given.push(givenRow);
+        }
+        const notes = cellNotes.map(row => row.map(s => [...s]));
+        const state = {
+            grid, given, notes,
+            timer: timerSeconds,
+            difficulty: currentDifficulty,
+            gameActive, isPaused, notesMode,
+            hintCount, mistakes
+        };
+        try { localStorage.setItem("sudoku-save", JSON.stringify(state)); } catch {}
+    }
+
+    function restoreGameState() {
+        try {
+            const raw = localStorage.getItem("sudoku-save");
+            if (!raw) return false;
+            const state = JSON.parse(raw);
+            if (!state.grid || !state.given) return false;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    if (state.given[r][c]) {
+                        cell.value = state.grid[r][c] || "";
+                        cell.className = state.grid[r][c] ? "cell-input given has-value" : "cell-input";
+                        cell.readOnly = true;
+                    } else if (state.grid[r][c]) {
+                        cell.value = state.grid[r][c];
+                        cell.className = "cell-input has-value";
+                        cell.readOnly = false;
+                    } else {
+                        cell.value = "";
+                        cell.className = "cell-input";
+                        cell.readOnly = false;
+                    }
+                    if (state.notes && state.notes[r] && state.notes[r][c]) {
+                        cellNotes[r][c] = new Set(state.notes[r][c]);
+                        updateNotesUI(r, c);
+                    }
+                }
+            }
+            timerSeconds = state.timer || 0;
+            currentDifficulty = state.difficulty || null;
+            gameActive = state.gameActive || false;
+            isPaused = state.isPaused || false;
+            notesMode = state.notesMode || false;
+            hintCount = state.hintCount ?? 3;
+            mistakes = state.mistakes || 0;
+            updateTimerDisplay();
+            setDifficultyBadge(currentDifficulty);
+            setNotesMode(notesMode);
+            updateMistakeDisplay();
+            updateHintDisplay();
+            if (gameActive && !isPaused) startTimer();
+            checkConflicts();
+            updateRemainingTracker();
+            return true;
+        } catch { return false; }
+    }
+
+    function clearSave() {
+        try { localStorage.removeItem("sudoku-save"); } catch {}
+    }
+
+    // --- Mistake Tracking ---
+    function trackMistakes() {
+        const hasConflict = checkConflicts();
+        if (hasConflict && !lastConflictState) {
+            mistakes++;
+            updateMistakeDisplay();
+        }
+        lastConflictState = hasConflict;
+    }
+
+    function updateMistakeDisplay() {
+        const el = document.getElementById("mistake-val");
+        if (el) el.textContent = mistakes;
+    }
+
+    // --- Hint Display ---
+    function updateHintDisplay() {
+        const hintCountEl = document.getElementById("hint-count");
+        const hintText = document.getElementById("hint-text");
+        const hintBtn = document.getElementById("hint-btn");
+        if (hintCountEl) hintCountEl.textContent = hintCount;
+        if (hintBtn) hintBtn.disabled = hintCount <= 0;
+        if (hintText) hintText.textContent = hintCount <= 0 ? "No hints" : "Hint";
+    }
+
+    // --- Statistics ---
+    function getStats() {
+        try {
+            return JSON.parse(localStorage.getItem("sudoku-stats")) || {
+                gamesPlayed: 0, gamesWon: 0, bestTimes: {},
+                totalTime: 0, totalHints: 0, totalMistakes: 0
+            };
+        } catch {
+            return { gamesPlayed: 0, gamesWon: 0, bestTimes: {}, totalTime: 0, totalHints: 0, totalMistakes: 0 };
+        }
+    }
+
+    function saveStats(stats) {
+        try { localStorage.setItem("sudoku-stats", JSON.stringify(stats)); } catch {}
+    }
+
+    function recordGameEnd(won) {
+        const stats = getStats();
+        stats.gamesPlayed++;
+        if (won) {
+            stats.gamesWon++;
+            stats.totalTime += timerSeconds;
+            stats.totalHints += (3 - hintCount);
+            stats.totalMistakes += mistakes;
+            if (currentDifficulty) {
+                const prev = stats.bestTimes[currentDifficulty];
+                if (!prev || timerSeconds < prev) {
+                    stats.bestTimes[currentDifficulty] = timerSeconds;
+                }
+            }
+        }
+        saveStats(stats);
+    }
+
+    function openStatsModal() {
+        const stats = getStats();
+        const winRate = stats.gamesPlayed ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+        const avgTime = stats.gamesWon ? formatTime(Math.round(stats.totalTime / stats.gamesWon)) : "\u2014";
+        const bestEasy = stats.bestTimes.easy != null ? formatTime(stats.bestTimes.easy) : "\u2014";
+        const bestMedium = stats.bestTimes.medium != null ? formatTime(stats.bestTimes.medium) : "\u2014";
+        const bestHard = stats.bestTimes.hard != null ? formatTime(stats.bestTimes.hard) : "\u2014";
+
+        const statsModal = document.getElementById("stats-modal");
+        document.getElementById("stats-content").innerHTML = `
+            <div class="stat-row"><span class="stat-label">Games Played</span><span class="stat-value">${stats.gamesPlayed}</span></div>
+            <div class="stat-row"><span class="stat-label">Games Won</span><span class="stat-value">${stats.gamesWon}</span></div>
+            <div class="stat-row"><span class="stat-label">Win Rate</span><span class="stat-value">${winRate}%</span></div>
+            <div class="stat-row"><span class="stat-label">Best Time (Easy)</span><span class="stat-value">${bestEasy}</span></div>
+            <div class="stat-row"><span class="stat-label">Best Time (Medium)</span><span class="stat-value">${bestMedium}</span></div>
+            <div class="stat-row"><span class="stat-label">Best Time (Hard)</span><span class="stat-value">${bestHard}</span></div>
+            <div class="stat-row"><span class="stat-label">Avg Completion Time</span><span class="stat-value">${avgTime}</span></div>
+            <div class="stat-row"><span class="stat-label">Total Hints Used</span><span class="stat-value">${stats.totalHints}</span></div>
+            <div class="stat-row"><span class="stat-label">Total Mistakes</span><span class="stat-value">${stats.totalMistakes}</span></div>
+        `;
+        statsModal.hidden = false;
+        statsModal._previousFocus = document.activeElement;
+        document.getElementById("close-stats-btn").focus();
+    }
+
+    function closeStatsModal() {
+        const statsModal = document.getElementById("stats-modal");
+        statsModal.hidden = true;
+        if (statsModal._previousFocus) {
+            statsModal._previousFocus.focus();
+            statsModal._previousFocus = null;
+        }
+    }
+
+    // --- Rules / How to Play Modal ---
+    function openRulesModal() {
+        const rulesModal = document.getElementById("rules-modal");
+        rulesModal.hidden = false;
+        rulesModal._previousFocus = document.activeElement;
+        document.getElementById("close-rules-btn").focus();
+    }
+
+    function closeRulesModal() {
+        const rulesModal = document.getElementById("rules-modal");
+        rulesModal.hidden = true;
+        if (rulesModal._previousFocus) {
+            rulesModal._previousFocus.focus();
+            rulesModal._previousFocus = null;
+        }
     }
 
     function undo() {
@@ -457,6 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!hasConflict) {
             gridWrapper.classList.add("grid-complete");
             setStatus("Puzzle complete!", "success");
+            recordGameEnd(true);
             if (timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
@@ -471,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- Conflict Checker ---
-    function checkConflicts() {
+    function checkConflicts(targetR, targetC) {
         document.querySelectorAll("input.error-cell").forEach(el => {
             el.classList.remove("error-cell");
         });
@@ -497,27 +697,47 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        for (let r = 0; r < 9; r++) {
-            const cells = [];
-            for (let c = 0; c < 9; c++) cells.push({ r, c });
-            checkGroup(cells);
-        }
+        if (targetR !== undefined && targetC !== undefined) {
+            const rowCells = [];
+            for (let c = 0; c < 9; c++) rowCells.push({ r: targetR, c });
+            checkGroup(rowCells);
 
-        for (let c = 0; c < 9; c++) {
-            const cells = [];
-            for (let r = 0; r < 9; r++) cells.push({ r, c });
-            checkGroup(cells);
-        }
+            const colCells = [];
+            for (let r = 0; r < 9; r++) colCells.push({ r, c: targetC });
+            checkGroup(colCells);
 
-        for (let boxRow = 0; boxRow < 3; boxRow++) {
-            for (let boxCol = 0; boxCol < 3; boxCol++) {
-                const cells = [];
-                for (let r = boxRow * 3; r < boxRow * 3 + 3; r++) {
-                    for (let c = boxCol * 3; c < boxCol * 3 + 3; c++) {
-                        cells.push({ r, c });
-                    }
+            const boxRow = Math.floor(targetR / 3) * 3;
+            const boxCol = Math.floor(targetC / 3) * 3;
+            const boxCells = [];
+            for (let r = boxRow; r < boxRow + 3; r++) {
+                for (let c = boxCol; c < boxCol + 3; c++) {
+                    boxCells.push({ r, c });
                 }
+            }
+            checkGroup(boxCells);
+        } else {
+            for (let r = 0; r < 9; r++) {
+                const cells = [];
+                for (let c = 0; c < 9; c++) cells.push({ r, c });
                 checkGroup(cells);
+            }
+
+            for (let c = 0; c < 9; c++) {
+                const cells = [];
+                for (let r = 0; r < 9; r++) cells.push({ r, c });
+                checkGroup(cells);
+            }
+
+            for (let boxRow = 0; boxRow < 3; boxRow++) {
+                for (let boxCol = 0; boxCol < 3; boxCol++) {
+                    const cells = [];
+                    for (let r = boxRow * 3; r < boxRow * 3 + 3; r++) {
+                        for (let c = boxCol * 3; c < boxCol * 3 + 3; c++) {
+                            cells.push({ r, c });
+                        }
+                    }
+                    checkGroup(cells);
+                }
             }
         }
 
@@ -657,7 +877,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         clearCompletion();
-        checkConflicts();
+        trackMistakes();
         updateRemainingTracker();
         highlightSameNumbers(cell);
         saveHistory();
@@ -697,7 +917,7 @@ document.addEventListener("DOMContentLoaded", () => {
             updateNotesUI(r, c);
             
             clearCompletion();
-            checkConflicts();
+            trackMistakes();
             saveHistory();
             return;
         }
@@ -736,7 +956,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     updateNotesUI(r, c);
                     
                     clearCompletion();
-                    checkConflicts();
+                    trackMistakes();
                     updateRemainingTracker();
                     saveHistory();
                 }
@@ -753,6 +973,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("keydown", (e) => {
         // Close modal on Escape even when typing
         if (e.key === "Escape") {
+            if (statsModal && !statsModal.hidden) { closeStatsModal(); return; }
+            if (rulesModal && !rulesModal.hidden) { closeRulesModal(); return; }
             if (shortcutsModal && !shortcutsModal.hidden) {
                 closeShortcutsModal();
                 return;
@@ -881,7 +1103,14 @@ document.addEventListener("DOMContentLoaded", () => {
         setDifficultyBadge(null);
         
         gameActive = false;
+        currentDifficulty = null;
+        mistakes = 0;
+        hintCount = 3;
+        lastConflictState = false;
+        updateMistakeDisplay();
+        updateHintDisplay();
         resetTimer();
+        clearSave();
         
         saveHistory();
         setStatus("Grid cleared", "");
@@ -892,6 +1121,12 @@ document.addEventListener("DOMContentLoaded", () => {
         setLoading(true);
         setStatus("Generating…", "");
         resetTimer();
+        currentDifficulty = difficulty;
+        mistakes = 0;
+        hintCount = 3;
+        lastConflictState = false;
+        updateMistakeDisplay();
+        updateHintDisplay();
 
         try {
             const res = await fetch(`/generate?difficulty=${difficulty}`);
@@ -944,8 +1179,119 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // --- Hint Handler ---
+    const hintBtn = document.getElementById("hint-btn");
+    hintBtn?.addEventListener("click", async () => {
+        if (hintCount <= 0) return;
+        const grid = getGrid();
+        setLoading(true);
+        try {
+            const res = await fetch("/hint", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ grid }),
+            });
+            const data = await res.json();
+            if (data.error) {
+                setStatus(data.error, "error");
+            } else {
+                const cell = document.getElementById(`cell-${data.row}-${data.col}`);
+                cell.value = data.value;
+                cell.className = "cell-input hinted has-value";
+                cell.readOnly = false;
+                cellNotes[data.row][data.col].clear();
+                updateNotesUI(data.row, data.col);
+                updateRemainingTracker();
+                highlightSameNumbers(cell);
+                hintCount--;
+                updateHintDisplay();
+                saveHistory();
+                setStatus("Hint revealed!", "success");
+            }
+        } catch {
+            setStatus("Network error", "error");
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // --- Number Pad for Touch Devices ---
+    const numberPad = document.getElementById("number-pad");
+    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice && numberPad) {
+        numberPad.hidden = false;
+    }
+    numberPad?.addEventListener("click", (e) => {
+        const btn = e.target.closest(".num-btn");
+        if (!btn || !activeCell || activeCell.readOnly) return;
+        const num = parseInt(btn.dataset.num, 10);
+        const r = parseInt(activeCell.dataset.row, 10);
+        const c = parseInt(activeCell.dataset.col, 10);
+        if (num === 0) {
+            activeCell.value = "";
+            activeCell.classList.remove("has-value");
+            cellNotes[r][c].clear();
+            updateNotesUI(r, c);
+            clearCompletion();
+            trackMistakes();
+            updateRemainingTracker();
+            saveHistory();
+            return;
+        }
+        if (notesMode || activeCell.shiftKey) {
+            if (cellNotes[r][c].has(num)) cellNotes[r][c].delete(num);
+            else cellNotes[r][c].add(num);
+            activeCell.value = "";
+            activeCell.classList.remove("has-value");
+            updateNotesUI(r, c);
+        } else {
+            activeCell.value = num;
+            activeCell.classList.add("has-value");
+            cellNotes[r][c].clear();
+            updateNotesUI(r, c);
+            if (!gameActive) { gameActive = true; startTimer(); }
+        }
+        clearCompletion();
+        trackMistakes();
+        updateRemainingTracker();
+        highlightSameNumbers(activeCell);
+        saveHistory();
+        setTimeout(() => checkCompletion(), 50);
+    });
+
+    // --- Statistics Modal ---
+    const statsBtn = document.getElementById("stats-btn");
+    const statsModal = document.getElementById("stats-modal");
+    const closeStatsBtn = document.getElementById("close-stats-btn");
+    const resetStatsBtn = document.getElementById("reset-stats-btn");
+
+    statsBtn?.addEventListener("click", openStatsModal);
+    closeStatsBtn?.addEventListener("click", closeStatsModal);
+    statsModal?.addEventListener("click", (e) => { if (e.target === statsModal) closeStatsModal(); });
+    resetStatsBtn?.addEventListener("click", () => {
+        try { localStorage.removeItem("sudoku-stats"); } catch {}
+        closeStatsModal();
+        setStatus("Statistics reset", "");
+    });
+
+    // --- Rules Modal ---
+    const rulesBtn = document.getElementById("rules-btn");
+    const rulesModal = document.getElementById("rules-modal");
+    const closeRulesBtn = document.getElementById("close-rules-btn");
+
+    rulesBtn?.addEventListener("click", openRulesModal);
+    closeRulesBtn?.addEventListener("click", closeRulesModal);
+    rulesModal?.addEventListener("click", (e) => { if (e.target === rulesModal) closeRulesModal(); });
+
+    // --- Timer auto-save (every 5 seconds while game is active) ---
+    setInterval(() => {
+        if (gameActive && !isPaused) saveGameState();
+    }, 5000);
+
     // --- Initial Setup ---
-    saveHistory();
-    updateRemainingTracker();
-    setDifficultyBadge(null);
+    if (!restoreGameState()) {
+        saveHistory();
+        updateRemainingTracker();
+        setDifficultyBadge(null);
+    }
 });

@@ -90,6 +90,21 @@
                     </div>
                 </div>
             </div>
+
+            <div id="number-pad" class="number-pad" hidden>
+                <button class="num-btn" data-num="1">1</button>
+                <button class="num-btn" data-num="2">2</button>
+                <button class="num-btn" data-num="3">3</button>
+                <button class="num-btn" data-num="4">4</button>
+                <button class="num-btn" data-num="5">5</button>
+                <button class="num-btn" data-num="6">6</button>
+                <button class="num-btn" data-num="7">7</button>
+                <button class="num-btn" data-num="8">8</button>
+                <button class="num-btn" data-num="9">9</button>
+                <button class="num-btn num-btn-erase" data-num="0" title="Erase">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+                </button>
+            </div>
         </main>
 
         <!-- Sidebar Panel: Timer, Actions, Tracker -->
@@ -102,6 +117,9 @@
                 </div>
                 <div class="timer-display">
                     <span id="timer-val">00:00</span>
+                </div>
+                <div class="timer-mistakes">
+                    <span id="mistake-val">0</span> mistakes
                 </div>
                 <div class="timer-controls">
                     <button id="timer-toggle-btn" class="btn btn-secondary btn-sm" title="Pause Game">
@@ -162,6 +180,14 @@
                     </div>
                     <button id="clear-btn" class="btn btn-secondary" title="Clear entire grid">Clear Grid</button>
                 </div>
+
+                <div class="action-grid-one">
+                    <button id="hint-btn" class="btn btn-secondary" title="Reveal one correct cell (3 per game)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 2a7 7 0 0 1 4 12.73V21a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-6.27A7 7 0 0 1 12 2z"/></svg>
+                        <span id="hint-text">Hint</span>
+                        <span id="hint-count" class="hint-badge">3</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Section 3: Numbers Remaining Tracker (Moved to Sidebar) -->
@@ -180,6 +206,12 @@
             <!-- Section 4: Sidebar Footer -->
             <footer class="sidebar-footer">
                 <div id="status" aria-live="polite">Workspace ready</div>
+                <button id="rules-btn" class="icon-btn" aria-label="How to play" title="How to Play">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+                </button>
+                <button id="stats-btn" class="icon-btn" aria-label="View statistics" title="Statistics">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                </button>
                 <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" title="Toggle theme">
                     <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="4"></circle>
@@ -213,34 +245,96 @@
                 <button id="close-modal-btn" class="modal-close-btn" title="Close guide (Esc)">&times;</button>
             </div>
             <div class="guide-list">
+                <span class="guide-section-title">Navigation</span>
                 <div class="guide-item">
                     <span class="guide-keys"><kbd>▲</kbd><kbd>▼</kbd><kbd>◀</kbd><kbd>▶</kbd><span class="guide-separator">/</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>
                     <span class="guide-desc">Navigate grid</span>
                 </div>
                 <div class="guide-item">
-                    <span class="guide-keys"><kbd>1</kbd>-<kbd>9</kbd></span>
-                    <span class="guide-desc">Input value/note</span>
+                    <span class="guide-keys"><kbd>Tab</kbd></span>
+                    <span class="guide-desc">Next empty cell</span>
+                </div>
+
+                <span class="guide-section-title">Input</span>
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>1</kbd>–<kbd>9</kbd></span>
+                    <span class="guide-desc">Enter digit</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-keys"><kbd>Shift</kbd>+<kbd>1-9</kbd></span>
+                    <span class="guide-desc">Toggle pencil note</span>
                 </div>
                 <div class="guide-item">
                     <span class="guide-keys"><kbd>Del</kbd><span class="guide-separator">/</span><kbd>Backspace</kbd></span>
-                    <span class="guide-desc">Clear cell value</span>
+                    <span class="guide-desc">Clear cell</span>
                 </div>
                 <div class="guide-item">
-                    <span class="guide-keys"><kbd>N</kbd><span class="guide-separator">/</span><kbd>Shift</kbd></span>
-                    <span class="guide-desc">Toggle Pencil Mode</span>
+                    <span class="guide-keys"><kbd>N</kbd></span>
+                    <span class="guide-desc">Toggle pencil mode</span>
                 </div>
+
+                <span class="guide-section-title">Game</span>
                 <div class="guide-item">
                     <span class="guide-keys"><kbd>U</kbd><span class="guide-separator">/</span><kbd>R</kbd></span>
-                    <span class="guide-desc">Undo / Redo move</span>
+                    <span class="guide-desc">Undo / Redo</span>
                 </div>
                 <div class="guide-item">
                     <span class="guide-keys"><kbd>Space</kbd></span>
-                    <span class="guide-desc">Pause / Resume timer</span>
+                    <span class="guide-desc">Pause / Resume</span>
                 </div>
                 <div class="guide-item">
-                    <span class="guide-keys"><kbd>?</kbd> / <kbd>Shift</kbd>+<kbd>?</kbd></span>
-                    <span class="guide-desc">Show keyboard guide</span>
+                    <span class="guide-keys"><kbd>?</kbd></span>
+                    <span class="guide-desc">Show this guide</span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div id="stats-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-label="Statistics">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="card-label">Statistics</span>
+                <button id="close-stats-btn" class="modal-close-btn" title="Close (Esc)">&times;</button>
+            </div>
+            <div class="stats-grid" id="stats-content"></div>
+            <div class="stats-footer">
+                <button id="reset-stats-btn" class="btn btn-secondary btn-sm">Reset Statistics</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="rules-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-label="How to play">
+        <div class="modal-content modal-content-wide">
+            <div class="modal-header">
+                <span class="card-label">How to Play</span>
+                <button id="close-rules-btn" class="modal-close-btn" title="Close (Esc)">&times;</button>
+            </div>
+            <div class="rules-body">
+                <p class="rules-intro">Sudoku is a logic-based number puzzle. The goal is to fill a 9×9 grid so that every row, column, and 3×3 box contains the digits 1 through 9 exactly once.</p>
+                <div class="rule-item">
+                    <span class="rule-num">1</span>
+                    <div><strong>Each row</strong> must contain 1–9 with no repeats.</div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-num">2</span>
+                    <div><strong>Each column</strong> must contain 1–9 with no repeats.</div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-num">3</span>
+                    <div><strong>Each 3×3 box</strong> must contain 1–9 with no repeats.</div>
+                </div>
+                <div class="rules-divider"></div>
+                <h3 class="rules-subheading">Pencil Notes</h3>
+                <p class="rules-text">Use pencil notes to track possible candidates in empty cells. Toggle notes mode with the <kbd>N</kbd> key or the Notes button, then press a number to add or remove a note.</p>
+                <h3 class="rules-subheading">Tips</h3>
+                <ul class="rules-list">
+                    <li>Start with rows, columns, or boxes that have the most numbers filled in.</li>
+                    <li>Use the Placement Tracker to see which digits are still needed.</li>
+                    <li>Click a digit in the tracker to highlight all instances on the grid.</li>
+                    <li>Use hints when you're stuck — you get 3 per game.</li>
+                </ul>
             </div>
         </div>
     </div>

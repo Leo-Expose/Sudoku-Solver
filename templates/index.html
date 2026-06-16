@@ -23,29 +23,19 @@
     <!-- Preload critical font (LCP element uses this) -->
     <link rel="preload" href="{{ url_for('static', filename='fonts/JetBrainsMono-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
 
-    <!-- Critical CSS inlined for fast first paint -->
+    <!-- Inline @font-face so browser discovers font at parse time (works with preload) -->
     <style>
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{--color-bg:#EAECEF;--color-surface:#F3F4F6;--color-card:#FFFFFF;--color-cell:#FFFFFF;--color-cell-shaded:#F8FAFC;--color-border:#D1D5DB;--color-text:#1F2937;--color-text-muted:#6B7280;--grid-line-thick:#1F2937;--grid-line-thin:#E5E7EB;--cell-highlight-same:#C2DBFA;--cell-highlight-axis:#E8F0FE;--cell-highlight-block:#E8F0FE;--color-accent-blue:#0F62FE;--radius-sm:4px;--radius-md:6px;--radius-lg:8px;--transition-smooth:0.2s cubic-bezier(0.16,1,0.3,1);color-scheme:light}
-        html,body{height:100vh;overflow:hidden}
-        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background-color:var(--color-bg);color:var(--color-text);position:relative;line-height:1.6;transition:background-color 0.2s ease,color 0.2s ease}
-        .app-layout{position:relative;z-index:1;display:flex;height:100vh;width:100%;margin:0;overflow:hidden}
-        .main-content{flex:1;display:flex;flex-direction:column;padding:48px 48px 48px;align-items:center;justify-content:center;height:100%;overflow-y:auto}
-        .studio-header{width:100%;max-width:524px;margin-bottom:20px;text-align:left}
-        .brand-title{font-family:'Instrument Serif','Playfair Display',serif;font-size:2rem;font-weight:400;letter-spacing:-0.03em;line-height:1;color:var(--color-text)}
-        .grid-panel{display:flex;justify-content:center;align-items:center;margin-bottom:0}
-        #grid-wrapper{position:relative;padding:20px;background-color:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);transition:transform var(--transition-smooth),box-shadow var(--transition-smooth)}
-        #grid{display:grid;grid-template-columns:repeat(3,auto);background-color:var(--grid-line-thick);border:2px solid var(--grid-line-thick);gap:2px;border-radius:var(--radius-md);overflow:hidden;width:fit-content;height:fit-content}
-        .box{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);background-color:var(--grid-line-thin);gap:1px}
-        .cell-container{position:relative;width:52px;height:52px;background-color:var(--color-cell);transition:background-color 0.15s ease}
-        .cell-input{position:absolute;top:0;left:0;width:100%;height:100%;border:none;outline:none;background:transparent;text-align:center;font-size:21px;font-weight:500;font-family:'JetBrains Mono',monospace;color:var(--color-text);z-index:2;caret-color:transparent;transition:background-color 0.15s ease,color 0.15s ease}
-        .cell-input:focus{background-color:var(--color-cell);box-shadow:0 0 0 2px color-mix(in srgb,var(--color-accent-blue) 35%,transparent);font-weight:600}
-        .cell-input.given{background-color:transparent;color:var(--color-accent-blue);font-weight:700}
+        @font-face {
+            font-family: 'JetBrains Mono';
+            font-style: normal;
+            font-weight: 400 700;
+            font-display: swap;
+            src: url('{{ url_for("static", filename="fonts/JetBrainsMono-latin.woff2") }}') format('woff2');
+        }
     </style>
 
-    <!-- Full stylesheet loaded async -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"></noscript>
+    <!-- Full stylesheet loaded synchronously (28KB on Vercel edge = <100ms, not the bottleneck) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
     <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
 </head>

@@ -9,8 +9,11 @@
     {
       "source": "/static/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3153600, immutable" }
+        { "key": "Cache-Control", "value": "public, max-age=2592000" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
   ]
 }

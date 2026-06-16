@@ -19,6 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function openShortcutsModal() {
         if (!shortcutsModal) return;
         shortcutsModal.hidden = false;
+        shortcutsModal._previousFocus = document.activeElement;
+        const focusable = shortcutsModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length) focusable[0].focus();
         // Silently pause the timer while help is open (no overlay)
         if (gameActive && !isPaused && timerInterval) {
             clearInterval(timerInterval);
@@ -30,6 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function closeShortcutsModal() {
         if (!shortcutsModal) return;
         shortcutsModal.hidden = true;
+        if (shortcutsModal._previousFocus) {
+            shortcutsModal._previousFocus.focus();
+            shortcutsModal._previousFocus = null;
+        }
         // Resume the timer if we paused it
         if (modalTimerPaused) {
             modalTimerPaused = false;
@@ -59,6 +66,20 @@ document.addEventListener("DOMContentLoaded", () => {
         shortcutsModal.addEventListener("click", (e) => {
             if (e.target === shortcutsModal) {
                 closeShortcutsModal();
+            }
+        });
+        shortcutsModal.addEventListener("keydown", (e) => {
+            if (e.key === "Tab") {
+                const focusable = shortcutsModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
             }
         });
     }
@@ -125,13 +146,21 @@ document.addEventListener("DOMContentLoaded", () => {
             timerInterval = null;
         }
         isPaused = true;
-        document.getElementById("pause-overlay").hidden = false;
+        const overlay = document.getElementById("pause-overlay");
+        overlay.hidden = false;
+        overlay._previousFocus = document.activeElement;
+        document.getElementById("resume-btn").focus();
         updateTimerControlsUI();
     }
 
     function resumeTimer() {
         isPaused = false;
-        document.getElementById("pause-overlay").hidden = true;
+        const overlay = document.getElementById("pause-overlay");
+        overlay.hidden = true;
+        if (overlay._previousFocus) {
+            overlay._previousFocus.focus();
+            overlay._previousFocus = null;
+        }
         timerInterval = setInterval(() => {
             timerSeconds++;
             updateTimerDisplay();
@@ -443,72 +472,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- Conflict Checker ---
     function checkConflicts() {
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                document.getElementById(`cell-${r}-${c}`).classList.remove("error-cell");
-            }
-        }
+        document.querySelectorAll("input.error-cell").forEach(el => {
+            el.classList.remove("error-cell");
+        });
 
         let hasConflict = false;
 
-        for (let r = 0; r < 9; r++) {
+        function checkGroup(cells) {
             const map = {};
-            for (let c = 0; c < 9; c++) {
+            cells.forEach(({ r, c }) => {
                 const val = document.getElementById(`cell-${r}-${c}`).value;
                 if (val) {
                     if (!map[val]) map[val] = [];
-                    map[val].push(c);
+                    map[val].push({ r, c });
                 }
-            }
+            });
             for (const val in map) {
                 if (map[val].length > 1) {
                     hasConflict = true;
-                    map[val].forEach(c => {
+                    map[val].forEach(({ r, c }) => {
                         document.getElementById(`cell-${r}-${c}`).classList.add("error-cell");
                     });
                 }
             }
         }
 
+        for (let r = 0; r < 9; r++) {
+            const cells = [];
+            for (let c = 0; c < 9; c++) cells.push({ r, c });
+            checkGroup(cells);
+        }
+
         for (let c = 0; c < 9; c++) {
-            const map = {};
-            for (let r = 0; r < 9; r++) {
-                const val = document.getElementById(`cell-${r}-${c}`).value;
-                if (val) {
-                    if (!map[val]) map[val] = [];
-                    map[val].push(r);
-                }
-            }
-            for (const val in map) {
-                if (map[val].length > 1) {
-                    hasConflict = true;
-                    map[val].forEach(r => {
-                        document.getElementById(`cell-${r}-${c}`).classList.add("error-cell");
-                    });
-                }
-            }
+            const cells = [];
+            for (let r = 0; r < 9; r++) cells.push({ r, c });
+            checkGroup(cells);
         }
 
         for (let boxRow = 0; boxRow < 3; boxRow++) {
             for (let boxCol = 0; boxCol < 3; boxCol++) {
-                const map = {};
+                const cells = [];
                 for (let r = boxRow * 3; r < boxRow * 3 + 3; r++) {
                     for (let c = boxCol * 3; c < boxCol * 3 + 3; c++) {
-                        const val = document.getElementById(`cell-${r}-${c}`).value;
-                        if (val) {
-                            if (!map[val]) map[val] = [];
-                            map[val].push({ r, c });
-                        }
+                        cells.push({ r, c });
                     }
                 }
-                for (const val in map) {
-                    if (map[val].length > 1) {
-                        hasConflict = true;
-                        map[val].forEach(coord => {
-                            document.getElementById(`cell-${coord.r}-${coord.c}`).classList.add("error-cell");
-                        });
-                    }
-                }
+                checkGroup(cells);
             }
         }
 
@@ -544,10 +553,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         }
-    }
-
-    function highlightRelatedCells(focusRow, focusCol) {
-        // Axis/crosshair highlighting removed — use tracker for same-number selection
     }
 
 
@@ -718,6 +723,10 @@ document.addEventListener("DOMContentLoaded", () => {
             case "ArrowDown":  nr = Math.min(8, r + 1); break;
             case "ArrowLeft":  nc = Math.max(0, c - 1); break;
             case "ArrowRight": nc = Math.min(8, c + 1); break;
+            case "w": case "W": nr = Math.max(0, r - 1); break;
+            case "s": case "S": nr = Math.min(8, r + 1); break;
+            case "a": case "A": nc = Math.max(0, c - 1); break;
+            case "d": case "D": nc = Math.min(8, c + 1); break;
             case "Backspace":
             case "Delete":
                 if (!cell.readOnly) {

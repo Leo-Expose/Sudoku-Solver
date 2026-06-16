@@ -73,8 +73,6 @@
     --grid-line-thin:  #E5E7EB; /* visible between cells */
 
     --cell-highlight-same:    #C2DBFA; /* Soft clear blue for active cell and same digits */
-    --cell-highlight-axis:    #E8F0FE; /* Soft light blue/gray for crosshair row/column */
-    --cell-highlight-block:   #E8F0FE; /* Unified soft light blue/gray for crosshair 3x3 block */
 
     --color-accent-blue: #0F62FE; /* IBM Blue */
 
@@ -103,8 +101,6 @@
     --grid-line-thin:  #374151;
 
     --cell-highlight-same:    rgba(224, 157, 217, 0.22); /* Translucent pink — matches light mode feel */
-    --cell-highlight-axis:    rgba(199, 140, 197, 0.18);
-    --cell-highlight-block:   rgba(179, 116, 177, 0.14);
 
     --color-accent-blue: #E09DD9; /* Softer pastel pink accent for dark mode */
 
@@ -239,15 +235,6 @@ body {
     background-color: var(--color-cell);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-blue) 35%, transparent);
     font-weight: 600;
-}
-
-/* Cell highlight states (high specificity to override checkerboard shading) */
-.box .cell-container.highlight-axis {
-    background-color: var(--cell-highlight-axis);
-}
-
-.box .cell-container.highlight-block {
-    background-color: var(--cell-highlight-block);
 }
 
 /* Given (board-generated) numbers: accent blue, clearly distinct from user entries */

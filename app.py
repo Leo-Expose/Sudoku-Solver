@@ -1,8 +1,14 @@
+import os
 import random
 import copy
+import logging
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", os.urandom(32).hex())
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def is_valid(board, row, col, num):
@@ -107,39 +113,43 @@ def index():
 @app.route("/solve", methods=["POST"])
 def solve():
     data = request.json
+    if not data or "grid" not in data:
+        return jsonify({"error": "Missing 'grid' field"}), 400
     board = data["grid"]
+    if not isinstance(board, list) or len(board) != 9:
+        return jsonify({"error": "Grid must be a 9x9 array"}), 400
+    for row in board:
+        if not isinstance(row, list) or len(row) != 9:
+            return jsonify({"error": "Grid must be a 9x9 array"}), 400
     if not all(isinstance(cell, int) and 0 <= cell <= 9 for row in board for cell in row):
-        return jsonify({"error": "Invalid input"})
+        return jsonify({"error": "All cells must be integers 0-9"}), 400
     test = copy.deepcopy(board)
     if solve_sudoku(test):
         return jsonify({"solution": test})
-    return jsonify({"error": "No solution exists for this puzzle"})
+    return jsonify({"error": "No solution exists for this puzzle"}), 422
 
 
 @app.route("/generate", methods=["GET"])
 def generate():
     difficulty = request.args.get("difficulty", "medium", type=str)
     clue_map = {"easy": 45, "medium": 36, "hard": 28}
-    clues = clue_map.get(difficulty, 36)
+    if difficulty not in clue_map:
+        return jsonify({"error": f"Invalid difficulty. Choose from: {', '.join(clue_map)}"}), 400
+    clues = clue_map[difficulty]
     puzzle, solution = generate_puzzle(clues)
     return jsonify({"puzzle": puzzle, "solution": solution})
 
 
-@app.route("/validate", methods=["POST"])
-def validate():
-    data = request.json
-    board = data["grid"]
-    for i in range(9):
-        for j in range(9):
-            num = board[i][j]
-            if num != 0:
-                board[i][j] = 0
-                if not is_valid(board, i, j, num):
-                    board[i][j] = num
-                    return jsonify({"error": f"Invalid placement at row {i+1}, col {j+1}"})
-                board[i][j] = num
-    return jsonify({"message": "All placements are valid"})
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found"}), 404
+
+
+@app.errorhandler(500)
+def server_error(e):
+    logger.exception("Internal server error")
+    return jsonify({"error": "Internal server error"}), 500
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true")

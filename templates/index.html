@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudoku</title>
-    <meta name="description" content="Have you tried being high?">
-    <meta property="og:title" content="Sudoku">
-    <meta property="og:description" content="Have you tried being high?">
+    <title>Sudoku - Generate, Solve & Play Puzzles</title>
+    <meta name="description" content="Generate, solve and play Sudoku puzzles with a beautiful interface. Features include pencil notes, undo/redo, difficulty levels, and keyboard shortcuts.">
+    <meta property="og:title" content="Sudoku - Generate, Solve & Play Puzzles">
+    <meta property="og:description" content="Generate, solve and play Sudoku puzzles with a beautiful interface. Features include pencil notes, undo/redo, difficulty levels, and keyboard shortcuts.">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <meta id="color-meta" name="color-scheme" content="light dark">
     <script>
@@ -53,7 +53,7 @@
             <div class="grid-panel">
                 <div id="grid-wrapper">
                     <span class="complete-badge">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                         Complete
                     </span>
                     <div id="grid" fetchpriority="high">
@@ -74,6 +74,7 @@
                                                     data-col="{{ c }}"
                                                     autocomplete="off"
                                                     class="cell-input"
+                                                    aria-label="Row {{ r + 1 }}, Column {{ c + 1 }}"
                                                 >
                                                 <div class="notes-grid" id="notes-{{ r }}-{{ c }}">
                                                     <span>1</span><span>2</span><span>3</span>
@@ -104,12 +105,12 @@
                 </div>
                 <div class="timer-controls">
                     <button id="timer-toggle-btn" class="btn btn-secondary btn-sm" title="Pause Game">
-                        <svg class="play-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display: none;"><path d="M5 3l14 9-14 9V3z"/></svg>
-                        <svg class="pause-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+                        <svg class="play-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display: none;" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
+                        <svg class="pause-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
                         <span id="timer-toggle-text">Pause</span>
                     </button>
                     <button id="timer-reset-btn" class="btn btn-secondary btn-sm" title="Restart Timer">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5"/></svg>
                         Reset
                     </button>
                 </div>
@@ -121,7 +122,7 @@
                 
                 <div class="action-grid">
                     <button id="solve-btn" class="btn btn-primary" title="Solve puzzle using backtracking solver">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         <span class="btn-text">Solve</span>
                         <span class="spinner" hidden></span>
                     </button>
@@ -134,11 +135,11 @@
 
                 <div class="action-grid-three">
                     <button id="undo-btn" class="btn btn-secondary btn-sm" title="Undo Move (Key: U)" disabled>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7v6h6M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M3 7v6h6M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
                         Undo
                     </button>
                     <button id="redo-btn" class="btn btn-secondary btn-sm" title="Redo Move (Key: R)" disabled>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 7v6h-6M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 7v6h-6M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
                         Redo
                     </button>
                     <button id="reset-btn" class="btn btn-secondary btn-sm" title="Reset current progress">Reset</button>
@@ -147,7 +148,7 @@
                 <div class="action-grid-two">
                     <div class="new-game-group">
                         <button id="new-game-btn" class="btn btn-accent">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                             New Puzzle
                         </button>
                         <div id="difficulty-flyout" class="difficulty-flyout" hidden>
@@ -193,19 +194,19 @@
     </div>
 
     <!-- Pause Screen overlay -->
-    <div id="pause-overlay" class="pause-overlay" hidden>
+    <div id="pause-overlay" class="pause-overlay" hidden role="dialog" aria-modal="true" aria-label="Game paused">
         <div class="pause-content">
             <h2 class="pause-title">Puzzle Paused</h2>
             <p class="pause-subtitle">Grid is hidden while paused.</p>
             <button id="resume-btn" class="btn btn-primary">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
                 Resume
             </button>
         </div>
     </div>
 
     <!-- Keyboard Shortcuts Modal Dialog -->
-    <div id="shortcuts-modal" class="modal-overlay" hidden>
+    <div id="shortcuts-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
         <div class="modal-content">
             <div class="modal-header">
                 <span class="card-label">Keyboard Guides</span>

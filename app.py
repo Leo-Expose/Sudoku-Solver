@@ -1,14 +1,9 @@
 import os
 import random
 import copy
-import logging
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", os.urandom(32).hex())
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def is_valid(board, row, col, num):
@@ -23,16 +18,15 @@ def is_valid(board, row, col, num):
     return True
 
 
-def find_empty(board):
+def solve_sudoku(board):
+    empty = None
     for i in range(9):
         for j in range(9):
             if board[i][j] == 0:
-                return (i, j)
-    return None
-
-
-def solve_sudoku(board):
-    empty = find_empty(board)
+                empty = (i, j)
+                break
+        if empty:
+            break
     if not empty:
         return True
     row, col = empty
@@ -46,7 +40,14 @@ def solve_sudoku(board):
 
 
 def _count_solutions(board, limit=2):
-    empty = find_empty(board)
+    empty = None
+    for i in range(9):
+        for j in range(9):
+            if board[i][j] == 0:
+                empty = (i, j)
+                break
+        if empty:
+            break
     if not empty:
         return 1
     row, col = empty
@@ -65,7 +66,14 @@ def generate_full_board():
     board = [[0] * 9 for _ in range(9)]
 
     def fill(b):
-        empty = find_empty(b)
+        empty = None
+        for i in range(9):
+            for j in range(9):
+                if b[i][j] == 0:
+                    empty = (i, j)
+                    break
+            if empty:
+                break
         if not empty:
             return True
         row, col = empty
@@ -85,7 +93,7 @@ def generate_full_board():
 
 def generate_puzzle(clues=36):
     full = generate_full_board()
-    puzzle = copy.deepcopy(full)
+    puzzle = [row[:] for row in full]
     cells = [(i, j) for i in range(9) for j in range(9)]
     random.shuffle(cells)
     removed = 0
@@ -96,13 +104,27 @@ def generate_puzzle(clues=36):
             break
         backup = puzzle[row][col]
         puzzle[row][col] = 0
-        test = copy.deepcopy(puzzle)
+        test = [r[:] for r in puzzle]
         if _count_solutions(test) == 1:
             removed += 1
         else:
             puzzle[row][col] = backup
 
     return puzzle, full
+
+
+def _validate_grid(data):
+    if not data or "grid" not in data:
+        return None, (jsonify({"error": "Missing 'grid' field"}), 400)
+    board = data["grid"]
+    if not isinstance(board, list) or len(board) != 9:
+        return None, (jsonify({"error": "Grid must be a 9x9 array"}), 400)
+    for row in board:
+        if not isinstance(row, list) or len(row) != 9:
+            return None, (jsonify({"error": "Grid must be a 9x9 array"}), 400)
+    if not all(isinstance(cell, int) and 0 <= cell <= 9 for row in board for cell in row):
+        return None, (jsonify({"error": "All cells must be integers 0-9"}), 400)
+    return board, None
 
 
 @app.route("/")
@@ -112,17 +134,9 @@ def index():
 
 @app.route("/solve", methods=["POST"])
 def solve():
-    data = request.json
-    if not data or "grid" not in data:
-        return jsonify({"error": "Missing 'grid' field"}), 400
-    board = data["grid"]
-    if not isinstance(board, list) or len(board) != 9:
-        return jsonify({"error": "Grid must be a 9x9 array"}), 400
-    for row in board:
-        if not isinstance(row, list) or len(row) != 9:
-            return jsonify({"error": "Grid must be a 9x9 array"}), 400
-    if not all(isinstance(cell, int) and 0 <= cell <= 9 for row in board for cell in row):
-        return jsonify({"error": "All cells must be integers 0-9"}), 400
+    board, err = _validate_grid(request.json)
+    if err:
+        return err
     test = copy.deepcopy(board)
     if solve_sudoku(test):
         return jsonify({"solution": test})
@@ -142,17 +156,9 @@ def generate():
 
 @app.route("/hint", methods=["POST"])
 def hint():
-    data = request.json
-    if not data or "grid" not in data:
-        return jsonify({"error": "Missing 'grid' field"}), 400
-    board = data["grid"]
-    if not isinstance(board, list) or len(board) != 9:
-        return jsonify({"error": "Grid must be a 9x9 array"}), 400
-    for row in board:
-        if not isinstance(row, list) or len(row) != 9:
-            return jsonify({"error": "Grid must be a 9x9 array"}), 400
-    if not all(isinstance(cell, int) and 0 <= cell <= 9 for row in board for cell in row):
-        return jsonify({"error": "All cells must be integers 0-9"}), 400
+    board, err = _validate_grid(request.json)
+    if err:
+        return err
     empty_cells = [(r, c) for r in range(9) for c in range(9) if board[r][c] == 0]
     if not empty_cells:
         return jsonify({"error": "No empty cells to hint"}), 400
@@ -161,17 +167,6 @@ def hint():
         return jsonify({"error": "No solution exists for this puzzle"}), 422
     r, c = random.choice(empty_cells)
     return jsonify({"row": r, "col": c, "value": solution[r][c]})
-
-
-@app.errorhandler(404)
-def not_found(e):
-    return jsonify({"error": "Not found"}), 404
-
-
-@app.errorhandler(500)
-def server_error(e):
-    logger.exception("Internal server error")
-    return jsonify({"error": "Internal server error"}), 500
 
 
 if __name__ == "__main__":

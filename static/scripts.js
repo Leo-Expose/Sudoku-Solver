@@ -9,81 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const themeToggle = document.getElementById("theme-toggle");
     const diffFlyout = document.getElementById("difficulty-flyout");
     const gridWrapper = document.getElementById("grid-wrapper");
-    
-    // --- Keyboard Shortcuts Modal ---
-    const shortcutsModal = document.getElementById("shortcuts-modal");
-    const closeModalBtn = document.getElementById("close-modal-btn");
-
-    let modalTimerPaused = false; // tracks if WE paused the timer on modal open
-
-    function openShortcutsModal() {
-        if (!shortcutsModal) return;
-        shortcutsModal.hidden = false;
-        shortcutsModal._previousFocus = document.activeElement;
-        const focusable = shortcutsModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (focusable.length) focusable[0].focus();
-        // Silently pause the timer while help is open (no overlay)
-        if (gameActive && !isPaused && timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            modalTimerPaused = true;
-        }
-    }
-
-    function closeShortcutsModal() {
-        if (!shortcutsModal) return;
-        shortcutsModal.hidden = true;
-        if (shortcutsModal._previousFocus) {
-            shortcutsModal._previousFocus.focus();
-            shortcutsModal._previousFocus = null;
-        }
-        // Resume the timer if we paused it
-        if (modalTimerPaused) {
-            modalTimerPaused = false;
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                timerSeconds++;
-                updateTimerDisplay();
-            }, 1000);
-        }
-    }
-
-    function toggleShortcutsModal() {
-        if (!shortcutsModal) return;
-        if (shortcutsModal.hidden) {
-            openShortcutsModal();
-        } else {
-            closeShortcutsModal();
-        }
-    }
-
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener("click", () => {
-            closeShortcutsModal();
-        });
-    }
-
-    if (shortcutsModal) {
-        shortcutsModal.addEventListener("click", (e) => {
-            if (e.target === shortcutsModal) {
-                closeShortcutsModal();
-            }
-        });
-        shortcutsModal.addEventListener("keydown", (e) => {
-            if (e.key === "Tab") {
-                const focusable = shortcutsModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-                if (e.shiftKey && document.activeElement === first) {
-                    e.preventDefault();
-                    last.focus();
-                } else if (!e.shiftKey && document.activeElement === last) {
-                    e.preventDefault();
-                    first.focus();
-                }
-            }
-        });
-    }
 
     let activeCell = null;
     let notesMode = false;
@@ -245,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Notes Mode Logic ---
     const normalBtn = document.getElementById("mode-normal-btn");
     const notesBtn = document.getElementById("mode-notes-btn");
-    
+
     function setNotesMode(value) {
         notesMode = value;
         if (notesMode) {
@@ -324,7 +249,6 @@ document.addEventListener("DOMContentLoaded", () => {
         clearCompletion();
         checkConflicts();
         updateRemainingTracker();
-        // Re-apply same-number highlights after undo/redo
         if (activeCell) {
             highlightSameNumbers(activeCell);
         } else {
@@ -518,21 +442,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // --- Generic Modal Helpers ---
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.hidden = false;
+        modal._previousFocus = document.activeElement;
+        const closeBtn = document.getElementById(`close-${id.replace("-modal", "")}-btn`);
+        if (closeBtn) closeBtn.focus();
+        if (gameActive && !isPaused && timerInterval && id !== "shortcuts-modal") {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            modal._pausedTimer = true;
+        }
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.hidden = true;
+        if (modal._previousFocus) {
+            modal._previousFocus.focus();
+            modal._previousFocus = null;
+        }
+        if (modal._pausedTimer) {
+            modal._pausedTimer = false;
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+    }
+
     // --- Rules / How to Play Modal ---
     function openRulesModal() {
-        const rulesModal = document.getElementById("rules-modal");
-        rulesModal.hidden = false;
-        rulesModal._previousFocus = document.activeElement;
-        document.getElementById("close-rules-btn").focus();
+        openModal("rules-modal");
     }
 
     function closeRulesModal() {
-        const rulesModal = document.getElementById("rules-modal");
-        rulesModal.hidden = true;
-        if (rulesModal._previousFocus) {
-            rulesModal._previousFocus.focus();
-            rulesModal._previousFocus = null;
-        }
+        closeModal("rules-modal");
     }
 
     function undo() {
@@ -833,7 +782,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("grid").addEventListener("focusout", () => {
         setTimeout(() => {
             if (!document.activeElement || document.activeElement.tagName !== "INPUT") {
-                // Only clear highlights if no tracker filter is active
                 if (!activeFilterDigit) {
                     highlightSameNumbers(null);
                 }
@@ -862,7 +810,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const c = parseInt(cell.dataset.col, 10);
 
         cell.value = cell.value.replace(/[^1-9]/g, "").slice(0, 1);
-        
+
         if (!gameActive) {
             gameActive = true;
             startTimer();
@@ -899,23 +847,23 @@ document.addEventListener("DOMContentLoaded", () => {
         const isNoteInput = (notesMode || e.shiftKey) && !cell.readOnly;
         if (isNoteInput && e.key >= "1" && e.key <= "9") {
             e.preventDefault();
-            
+
             if (!gameActive) {
                 gameActive = true;
                 startTimer();
             }
-            
+
             const num = parseInt(e.key, 10);
             if (cellNotes[r][c].has(num)) {
                 cellNotes[r][c].delete(num);
             } else {
                 cellNotes[r][c].add(num);
             }
-            
+
             cell.value = "";
             cell.classList.remove("has-value");
             updateNotesUI(r, c);
-            
+
             clearCompletion();
             trackMistakes();
             saveHistory();
@@ -954,7 +902,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     cell.classList.remove("has-value");
                     cellNotes[r][c].clear();
                     updateNotesUI(r, c);
-                    
+
                     clearCompletion();
                     trackMistakes();
                     updateRemainingTracker();
@@ -975,10 +923,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Escape") {
             if (statsModal && !statsModal.hidden) { closeStatsModal(); return; }
             if (rulesModal && !rulesModal.hidden) { closeRulesModal(); return; }
-            if (shortcutsModal && !shortcutsModal.hidden) {
-                closeShortcutsModal();
-                return;
-            }
         }
 
         // Toggle shortcuts modal with '?' key when not typing in input
@@ -1048,7 +992,7 @@ document.addEventListener("DOMContentLoaded", () => {
             cell.classList.add("has-value");
             cell.className = "cell-input solved has-value";
             cell.readOnly = false;
-            
+
             cellNotes[r][c].clear();
             updateNotesUI(r, c);
             await sleep(15);
@@ -1074,12 +1018,12 @@ document.addEventListener("DOMContentLoaded", () => {
         checkConflicts();
         updateRemainingTracker();
         highlightSameNumbers(null);
-        
+
         if (gameActive) {
             timerSeconds = 0;
             updateTimerDisplay();
         }
-        
+
         saveHistory();
         setStatus("Progress reset", "");
     });
@@ -1101,7 +1045,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateRemainingTracker();
         highlightSameNumbers(null);
         setDifficultyBadge(null);
-        
+
         gameActive = false;
         currentDifficulty = null;
         mistakes = 0;
@@ -1111,7 +1055,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateHintDisplay();
         resetTimer();
         clearSave();
-        
+
         saveHistory();
         setStatus("Grid cleared", "");
     });
@@ -1158,14 +1102,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 checkConflicts();
                 updateRemainingTracker();
                 highlightSameNumbers(null);
-                
+
                 setDifficultyBadge(difficulty);
-                
-                // Initialize new history for this board
+
                 historyStack = [];
                 historyIndex = -1;
                 saveHistory();
-                
+
                 gameActive = true;
                 startTimer();
                 setStatus(`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} puzzle`, "success");

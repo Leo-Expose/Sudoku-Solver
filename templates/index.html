@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sudoku - Generate, Solve & Play Puzzles</title>
     <meta name="description" content="Generate, solve and play Sudoku puzzles with a beautiful interface. Features include pencil notes, undo/redo, difficulty levels, and keyboard shortcuts.">
-    <meta property="og:title" content="Sudoku - Generate, Solve & Play Puzzles">
-    <meta property="og:description" content="Generate, solve and play Sudoku puzzles with a beautiful interface. Features include pencil notes, undo/redo, difficulty levels, and keyboard shortcuts.">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <meta id="color-meta" name="color-scheme" content="light dark">
     <script>
@@ -20,10 +18,8 @@
         }
     </script>
 
-    <!-- Preload critical font (LCP element uses this) -->
     <link rel="preload" href="{{ url_for('static', filename='fonts/JetBrainsMono-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
 
-    <!-- Inline @font-face so browser discovers font at parse time (works with preload) -->
     <style>
         @font-face {
             font-family: 'JetBrains Mono';
@@ -34,17 +30,14 @@
         }
     </style>
 
-    <!-- Full stylesheet loaded synchronously (28KB on Vercel edge = <100ms, not the bottleneck) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
     <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
 </head>
 <body>
-    <!-- Subtle ambient warm light spotlight -->
     <div class="ambient-spotlight"></div>
 
     <div class="app-layout">
-        <!-- Main Area: Header, Grid -->
         <main class="main-content">
             <header class="studio-header">
                 <h1 class="brand-title">Sudoku</h1>
@@ -107,9 +100,7 @@
             </div>
         </main>
 
-        <!-- Sidebar Panel: Timer, Actions, Tracker -->
         <aside class="sidebar">
-            <!-- Section 1: Timer Card -->
             <div class="bento-card timer-card">
                 <div class="timer-header">
                     <span class="card-label">Elapsed Time</span>
@@ -134,7 +125,6 @@
                 </div>
             </div>
 
-            <!-- Section 2: Actions Bento Card -->
             <div class="bento-card actions-card">
                 <span class="card-label">Controls</span>
                 
@@ -190,7 +180,6 @@
                 </div>
             </div>
 
-            <!-- Section 3: Numbers Remaining Tracker (Moved to Sidebar) -->
             <div class="bento-card tracker-card">
                 <span class="card-label">Placement Tracker</span>
                 <div class="tracker-digits" id="number-tracker">
@@ -203,7 +192,6 @@
                 </div>
             </div>
 
-            <!-- Section 4: Sidebar Footer -->
             <footer class="sidebar-footer">
                 <div id="status" aria-live="polite">Workspace ready</div>
                 <button id="rules-btn" class="icon-btn" aria-label="How to play" title="How to Play">
@@ -225,7 +213,6 @@
         </aside>
     </div>
 
-    <!-- Pause Screen overlay -->
     <div id="pause-overlay" class="pause-overlay" hidden role="dialog" aria-modal="true" aria-label="Game paused">
         <div class="pause-content">
             <h2 class="pause-title">Puzzle Paused</h2>
@@ -237,7 +224,6 @@
         </div>
     </div>
 
-    <!-- Keyboard Shortcuts Modal Dialog -->
     <div id="shortcuts-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
         <div class="modal-content">
             <div class="modal-header">
@@ -247,7 +233,7 @@
             <div class="guide-list">
                 <span class="guide-section-title">Navigation</span>
                 <div class="guide-item">
-                    <span class="guide-keys"><kbd>▲</kbd><kbd>▼</kbd><kbd>◀</kbd><kbd>▶</kbd><span class="guide-separator">/</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>
+                    <span class="guide-keys"><kbd>&v*='."['n >}</kbd><span class="guide-separator">/</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>
                     <span class="guide-desc">Navigate grid</span>
                 </div>
                 <div class="guide-item">
@@ -290,7 +276,6 @@
         </div>
     </div>
 
-    <!-- Statistics Modal -->
     <div id="stats-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-label="Statistics">
         <div class="modal-content">
             <div class="modal-header">
@@ -304,7 +289,6 @@
         </div>
     </div>
 
-    <!-- How to Play Modal -->
     <div id="rules-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-label="How to play">
         <div class="modal-content modal-content-wide">
             <div class="modal-header">
@@ -327,16 +311,5 @@
                 </div>
                 <div class="rules-divider"></div>
                 <h3 class="rules-subheading">Pencil Notes</h3>
-                <p class="rules-text">Use pencil notes to track possible candidates in empty cells. Toggle notes mode with the <kbd>N</kbd> key or the Notes button, then press a number to add or remove a note.</p>
-                <h3 class="rules-subheading">Tips</h3>
-                <ul class="rules-list">
-                    <li>Start with rows, columns, or boxes that have the most numbers filled in.</li>
-                    <li>Use the Placement Tracker to see which digits are still needed.</li>
-                    <li>Click a digit in the tracker to highlight all instances on the grid.</li>
-                    <li>Use hints when you're stuck — you get 3 per game.</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+                <p class="rules-text">Use pencil notes to track possible candidates in empty cells. Toggle notes mode with the <kbd>N</kbd> key or the Notes button, then press a墨西哥城
+error:required tool write not found
